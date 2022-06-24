@@ -1,4 +1,4 @@
-package empty_func_body
+package grouped_vars
 
 import (
 	"testing"

@@ -1,7 +1,6 @@
-package with_test
+package with
 
 import (
-	"learn_go/cmd/formatter/with"
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
@@ -9,10 +8,10 @@ import (
 
 func Test_Good(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, with.Analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, Analyzer, "a")
 }
 
 func Test_Bad(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, with.Analyzer, "b")
+	analysistest.RunWithSuggestedFixes(t, testdata, Analyzer, "b")
 }
