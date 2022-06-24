@@ -1,0 +1,7 @@
+package a
+
+import "context"
+
+func ctxFirstParameter(ctx context.Context, a int) { // want "context first parameter"
+
+}

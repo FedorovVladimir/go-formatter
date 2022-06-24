@@ -1,0 +1,3 @@
+package a
+
+func main(ctx context.Context, a int) {}
