@@ -37,7 +37,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		endPos = e.Specs[0].End()
 		arr = append(arr, e.Specs...)
 	})
-	if len(arr) == 0 {
+	if len(arr) < 2 {
 		return nil, nil
 	}
 	var s []string
