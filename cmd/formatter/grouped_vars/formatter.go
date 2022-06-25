@@ -2,7 +2,6 @@ package grouped_vars
 
 import (
 	"bytes"
-	"fmt"
 	"go/ast"
 	"go/printer"
 	"go/token"
@@ -95,14 +94,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 			files[filename][i].end = end
 		}
-		oldLine = line
+		oldLine = pass.Fset.Position(e.End()).Line
 	})
 	for _, file := range files {
 		for _, specs := range file {
 			if len(specs.specs) < 2 {
 				continue
 			}
-			fmt.Println(pass.Fset.Position(specs.specs[len(specs.specs)-1].Pos()).Line)
 			var s []string
 			for _, spec := range specs.specs {
 				var b bytes.Buffer
@@ -110,11 +108,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				s = append(s, strings.TrimSpace(b.String()))
 			}
 			out := "(\n" + strings.Join(s, "\n") + "\n)"
-			// l1 := pass.Fset.Position(specs.pos).Line
-			// c1 := pass.Fset.Position(specs.pos).Column
-			// l2 := pass.Fset.Position(specs.end).Line
-			// c2 := pass.Fset.Position(specs.end).Column
-			// fmt.Println(l1, c1, l2, c2)
 			pass.Report(analysis.Diagnostic{
 				Pos:      specs.pos,
 				End:      specs.end,
