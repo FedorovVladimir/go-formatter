@@ -5,6 +5,7 @@ import (
 	"go-formatter/cmd/formatter/empty_func_body"
 	"go-formatter/cmd/formatter/grouped_vars"
 	"go-formatter/cmd/formatter/many_arguments"
+	"go-formatter/cmd/formatter/rm_ignore_vars"
 	"go-formatter/cmd/formatter/with"
 
 	"golang.org/x/tools/go/analysis/multichecker"
@@ -17,5 +18,6 @@ func main() {
 		grouped_vars.Analyzer,
 		many_arguments.Analyzer,
 		with.Analyzer,
+		rm_ignore_vars.Analyzer,
 	)
 }
