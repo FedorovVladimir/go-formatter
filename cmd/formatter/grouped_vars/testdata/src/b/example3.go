@@ -1,5 +1,5 @@
 package main
 
-var d = "a" // want "grouped vars"
-var e = "b"
-var f = "c"
+var d = "d" // want "grouped vars"
+var e = "e"
+var f = "f"

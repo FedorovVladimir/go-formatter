@@ -23,45 +23,69 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{(*ast.GenDecl)(nil)}
-	files := map[string][]ast.Spec{}
+	files := map[string][][]ast.Spec{}
+	oldFilename := ""
+	oldLine := 0
+	i := 0
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		e := n.(*ast.GenDecl)
 		if len(e.Specs) > 1 {
 			return
 		}
+
 		filename := pass.Fset.Position(e.Pos()).Filename
-		files[filename] = append(files[filename], e.Specs...)
+		if filename != oldFilename {
+			i = 0
+			files[filename] = append(files[filename], []ast.Spec{})
+		}
+		oldFilename = filename
+		line := pass.Fset.Position(e.Pos()).Line
+
+		if line-oldLine == 1 {
+			files[filename][i] = append(files[filename][i], e.Specs...)
+		}
+		if line-oldLine > 1 && oldLine != 0 {
+			i++
+			files[filename] = append(files[filename], []ast.Spec{})
+		}
+
+		if len(files[filename][i]) == 0 {
+			files[filename][i] = append(files[filename][i], e.Specs...)
+		}
+		oldLine = line
 	})
-	for _, specs := range files {
-		if len(specs) < 2 {
-			return nil, nil
-		}
-		var s []string
-		for _, spec := range specs {
-			var b bytes.Buffer
-			_ = printer.Fprint(&b, token.NewFileSet(), spec)
-			s = append(s, strings.TrimSpace(b.String()))
-		}
-		out := "(\n" + strings.Join(s, "\n") + "\n)"
-		pass.Report(analysis.Diagnostic{
-			Pos:      specs[0].Pos(),
-			End:      specs[len(specs)-1].End(),
-			Category: "names",
-			Message:  "grouped vars",
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "grouped vars",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     specs[0].Pos(),
-							End:     specs[len(specs)-1].End(),
-							NewText: []byte(out),
+	for _, file := range files {
+		for _, specs := range file {
+			if len(specs) < 2 {
+				return nil, nil
+			}
+			var s []string
+			for _, spec := range specs {
+				var b bytes.Buffer
+				_ = printer.Fprint(&b, token.NewFileSet(), spec)
+				s = append(s, strings.TrimSpace(b.String()))
+			}
+			out := "(\n" + strings.Join(s, "\n") + "\n)"
+			pass.Report(analysis.Diagnostic{
+				Pos:      specs[0].Pos(),
+				End:      specs[len(specs)-1].End(),
+				Category: "names",
+				Message:  "grouped vars",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "grouped vars",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     specs[0].Pos(),
+								End:     specs[len(specs)-1].End(),
+								NewText: []byte(out),
+							},
 						},
 					},
 				},
-			},
-			Related: nil,
-		})
+				Related: nil,
+			})
+		}
 	}
 	return nil, nil
 }

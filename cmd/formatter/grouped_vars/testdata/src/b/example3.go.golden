@@ -1,7 +1,7 @@
 package main
 
 var (
-	a = "a" // want "grouped vars"
-	b = "b"
-	c = "c"
+	d = "d" // want "grouped vars"
+	e = "e"
+	f = "f"
 )

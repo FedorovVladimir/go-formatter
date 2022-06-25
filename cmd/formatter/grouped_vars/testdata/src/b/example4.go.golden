@@ -1,0 +1,11 @@
+package main
+
+var (
+	g = "g" // want "grouped vars"
+	h = "h"
+)
+
+var (
+	i = "i" // want "grouped vars"
+	j = "j"
+)
