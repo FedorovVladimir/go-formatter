@@ -23,48 +23,45 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{(*ast.GenDecl)(nil)}
-	startPos := token.NoPos
-	endPos := token.NoPos
-	var arr []ast.Spec
+	files := map[string][]ast.Spec{}
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		e := n.(*ast.GenDecl)
 		if len(e.Specs) > 1 {
 			return
 		}
-		if startPos == token.NoPos {
-			startPos = e.Specs[0].(*ast.ValueSpec).Names[0].Pos()
-		}
-		endPos = e.Specs[0].End()
-		arr = append(arr, e.Specs...)
+		filename := pass.Fset.Position(e.Pos()).Filename
+		files[filename] = append(files[filename], e.Specs...)
 	})
-	if len(arr) < 2 {
-		return nil, nil
-	}
-	var s []string
-	for _, spec := range arr {
-		var b bytes.Buffer
-		_ = printer.Fprint(&b, token.NewFileSet(), spec)
-		s = append(s, strings.TrimSpace(b.String()))
-	}
-	out := "(\n" + strings.Join(s, "\n") + "\n)"
-	pass.Report(analysis.Diagnostic{
-		Pos:      startPos,
-		End:      endPos,
-		Category: "names",
-		Message:  "grouped vars",
-		SuggestedFixes: []analysis.SuggestedFix{
-			{
-				Message: "grouped vars",
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     startPos,
-						End:     endPos,
-						NewText: []byte(out),
+	for _, specs := range files {
+		if len(specs) < 2 {
+			return nil, nil
+		}
+		var s []string
+		for _, spec := range specs {
+			var b bytes.Buffer
+			_ = printer.Fprint(&b, token.NewFileSet(), spec)
+			s = append(s, strings.TrimSpace(b.String()))
+		}
+		out := "(\n" + strings.Join(s, "\n") + "\n)"
+		pass.Report(analysis.Diagnostic{
+			Pos:      specs[0].Pos(),
+			End:      specs[len(specs)-1].End(),
+			Category: "names",
+			Message:  "grouped vars",
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: "grouped vars",
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     specs[0].Pos(),
+							End:     specs[len(specs)-1].End(),
+							NewText: []byte(out),
+						},
 					},
 				},
 			},
-		},
-		Related: nil,
-	})
+			Related: nil,
+		})
+	}
 	return nil, nil
 }
