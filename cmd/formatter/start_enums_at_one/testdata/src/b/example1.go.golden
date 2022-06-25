@@ -1,0 +1,9 @@
+package main
+
+type Operation int
+
+const (
+	Add Operation = iota + 1 // want "start_enums_at_one"
+	Subtract
+	Multiply
+)
