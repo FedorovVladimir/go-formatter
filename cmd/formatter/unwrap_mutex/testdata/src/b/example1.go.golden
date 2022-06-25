@@ -1,9 +1,0 @@
-package main
-
-import "sync"
-
-func main() {
-	var mu sync.Mutex // want "unwrap_mutex"
-	mu.Lock()
-	defer mu.Unlock()
-}
