@@ -22,38 +22,6 @@ var Analyzer = &analysis.Analyzer{
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
 
-func run1(pass *analysis.Pass) (interface{}, error) {
-	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
-	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
-		e := n.(*ast.FuncDecl)
-		if e.Body.End()-e.Body.Pos() == 2 {
-			return
-		}
-		if e.Body.List == nil {
-			pass.Report(analysis.Diagnostic{
-				Pos:      e.Body.Pos(),
-				End:      e.Body.End(),
-				Category: "func",
-				Message:  "context first parameter",
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						Message: "context first parameter",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     e.Body.Pos(),
-								End:     e.Body.End(),
-								NewText: []byte("{}"),
-							},
-						},
-					},
-				},
-				Related: nil,
-			})
-		}
-	})
-	return nil, nil
-}
-
 func run(pass *analysis.Pass) (interface{}, error) {
 	var result string
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
