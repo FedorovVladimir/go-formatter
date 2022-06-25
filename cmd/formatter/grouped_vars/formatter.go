@@ -2,6 +2,7 @@ package grouped_vars
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/printer"
 	"go/token"
@@ -14,6 +15,12 @@ import (
 
 const Doc = `grouped vars`
 
+type group struct {
+	pos   token.Pos
+	end   token.Pos
+	specs []ast.Spec
+}
+
 var Analyzer = &analysis.Analyzer{
 	Name:     "grouped_vars_formatter",
 	Doc:      Doc,
@@ -23,52 +30,94 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{(*ast.GenDecl)(nil)}
-	files := map[string][][]ast.Spec{}
+	files := map[string][]group{}
 	oldFilename := ""
 	oldLine := 0
 	i := 0
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		e := n.(*ast.GenDecl)
-		if len(e.Specs) > 1 {
-			return
-		}
 
 		filename := pass.Fset.Position(e.Pos()).Filename
 		if filename != oldFilename {
 			i = 0
-			files[filename] = append(files[filename], []ast.Spec{})
+			pos := e.Lparen
+			if pos == token.NoPos {
+				pos = e.Specs[0].Pos()
+			}
+			end := e.Rparen
+			if end == token.NoPos {
+				end = e.Specs[len(e.Specs)-1].Pos()
+			}
+			files[filename] = append(
+				files[filename],
+				group{
+					pos:   pos,
+					end:   end,
+					specs: nil,
+				},
+			)
 		}
 		oldFilename = filename
 		line := pass.Fset.Position(e.Pos()).Line
 
 		if line-oldLine == 1 {
-			files[filename][i] = append(files[filename][i], e.Specs...)
+			files[filename][i].specs = append(files[filename][i].specs, e.Specs...)
+			end := e.Rparen + 1
+			if e.Rparen == token.NoPos {
+				end = e.Specs[len(e.Specs)-1].End()
+			}
+			files[filename][i].end = end
 		}
 		if line-oldLine > 1 && oldLine != 0 {
 			i++
-			files[filename] = append(files[filename], []ast.Spec{})
+			pos := e.Lparen
+			if e.Lparen == token.NoPos {
+				pos = e.Specs[0].Pos()
+			}
+			end := e.Rparen + 1
+			if e.Rparen == token.NoPos {
+				end = e.Specs[len(e.Specs)-1].End()
+			}
+			files[filename] = append(
+				files[filename], group{
+					pos:   pos,
+					end:   end,
+					specs: nil,
+				},
+			)
 		}
 
-		if len(files[filename][i]) == 0 {
-			files[filename][i] = append(files[filename][i], e.Specs...)
+		if len(files[filename][i].specs) == 0 {
+			files[filename][i].specs = append(files[filename][i].specs, e.Specs...)
+			end := e.Rparen + 1
+			if e.Rparen == token.NoPos {
+				end = e.Specs[len(e.Specs)-1].Pos()
+			}
+			files[filename][i].end = end
 		}
 		oldLine = line
 	})
 	for _, file := range files {
 		for _, specs := range file {
-			if len(specs) < 2 {
-				return nil, nil
+			if len(specs.specs) < 2 {
+				continue
 			}
+			fmt.Println(pass.Fset.Position(specs.specs[len(specs.specs)-1].Pos()).Line)
 			var s []string
-			for _, spec := range specs {
+			for _, spec := range specs.specs {
 				var b bytes.Buffer
 				_ = printer.Fprint(&b, token.NewFileSet(), spec)
 				s = append(s, strings.TrimSpace(b.String()))
 			}
 			out := "(\n" + strings.Join(s, "\n") + "\n)"
+			// l1 := pass.Fset.Position(specs.pos).Line
+			// c1 := pass.Fset.Position(specs.pos).Column
+			// l2 := pass.Fset.Position(specs.end).Line
+			// c2 := pass.Fset.Position(specs.end).Column
+			// fmt.Println(l1, c1, l2, c2)
 			pass.Report(analysis.Diagnostic{
-				Pos:      specs[0].Pos(),
-				End:      specs[len(specs)-1].End(),
+				Pos:      specs.pos,
+				End:      specs.end,
 				Category: "names",
 				Message:  "grouped vars",
 				SuggestedFixes: []analysis.SuggestedFix{
@@ -76,8 +125,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 						Message: "grouped vars",
 						TextEdits: []analysis.TextEdit{
 							{
-								Pos:     specs[0].Pos(),
-								End:     specs[len(specs)-1].End(),
+								Pos:     specs.pos,
+								End:     specs.end,
 								NewText: []byte(out),
 							},
 						},

@@ -1,6 +1,6 @@
 package a
 
-var (
+var ( // want "grouped vars"
 	a = "a"
 	b = "b"
 )
