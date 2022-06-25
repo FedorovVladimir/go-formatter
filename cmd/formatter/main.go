@@ -5,6 +5,7 @@ import (
 	"go-formatter/cmd/formatter/empty_func_body"
 	"go-formatter/cmd/formatter/grouped_vars"
 	"go-formatter/cmd/formatter/many_arguments"
+	"go-formatter/cmd/formatter/methods_with_star_and_rename"
 	"go-formatter/cmd/formatter/rm_ignore_vars"
 	"go-formatter/cmd/formatter/start_enums_at_one"
 	"go-formatter/cmd/formatter/with"
@@ -21,5 +22,6 @@ func main() {
 		with.Analyzer,
 		rm_ignore_vars.Analyzer,
 		start_enums_at_one.Analyzer,
+		methods_with_star_and_rename.Analyzer,
 	)
 }
