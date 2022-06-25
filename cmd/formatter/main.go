@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-formatter/cmd/formatter/context_first_parameter"
 	"go-formatter/cmd/formatter/empty_func_body"
 	"go-formatter/cmd/formatter/grouped_vars"
 	"go-formatter/cmd/formatter/many_arguments"
@@ -11,9 +12,10 @@ import (
 
 func main() {
 	multichecker.Main(
-		with.Analyzer,
+		context_first_parameter.Analyzer,
 		empty_func_body.Analyzer,
 		grouped_vars.Analyzer,
 		many_arguments.Analyzer,
+		with.Analyzer,
 	)
 }
