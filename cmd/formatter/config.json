@@ -1,0 +1,49 @@
+{
+  "formatters": [
+    {
+      "name": "context_first_parameter",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "empty_func_body",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "grouped_vars",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "many_arguments",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "methods_with_star_and_rename",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "new_line",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "rm_ignore_vars",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "start_enums_at_one",
+      "on": true,
+      "parameter": []
+    },
+    {
+      "name": "with",
+      "on": true,
+      "parameter": []
+    }
+  ]
+}
