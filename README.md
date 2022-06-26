@@ -126,8 +126,17 @@ func WithCarColor(color string) {}
 ```go
 package main
 
-var a = "a" // want "grouped vars"
+var a = "a"
 var b = "b"
+
+var (
+	с = "с"
+)
+
+var (
+	d = "d"
+)
+var e = "e"
 ```
 
 После
@@ -136,8 +145,15 @@ var b = "b"
 package main
 
 var (
-	a = "a" // want "grouped vars"
+	a = "a"
 	b = "b"
+)
+
+var с = "с"
+
+var (
+	d = "d"
+	e = "e"
 )
 ```
 
@@ -199,7 +215,7 @@ type car struct{}
 
 func (c *car) run() {}
 
-func (e car) stop() {}
+func (c *car) stop() {}
 
 
 ```
@@ -215,8 +231,6 @@ type car struct{}
 
 func (c *car) run()  {}
 func (c *car) stop() {}
-
-
 ```
 
 После
@@ -229,8 +243,6 @@ type car struct{}
 func (c *car) run() {}
 
 func (c *car) stop() {}
-
-
 ```
 
 ### rm_ignore_vars
@@ -243,8 +255,6 @@ package main
 var _, b = "b", "b"
 
 var _, _ = "b", "b"
-
-
 ```
 
 После
@@ -253,10 +263,6 @@ var _, _ = "b", "b"
 package main
 
 var _, b = "b", "b"
-
-
-
-
 ```
 
 ### start_enums_at_one
@@ -273,8 +279,6 @@ const (
 	Subtract
 	Multiply
 )
-
-
 ```
 
 После
@@ -289,8 +293,6 @@ const (
 	Subtract
 	Multiply
 )
-
-
 ```
 
 ### with
@@ -301,6 +303,8 @@ const (
 package a
 
 func CarWithColor(color string) {}
+
+func carWithPrice(price float64) {}
 ```
 
 После
@@ -310,11 +314,10 @@ package a
 
 func WithCarColor(color string) {}
 
+func withCarPrice(price float64) {}
 ```
 
 ## Как пользоваться
-
-### Установка
 
 ### Запуск
 
