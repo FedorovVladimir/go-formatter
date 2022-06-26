@@ -98,6 +98,34 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	})
 	for _, file := range files {
 		for _, specs := range file {
+			if len(specs.specs) == 1 {
+				var b bytes.Buffer
+				_ = printer.Fprint(&b, token.NewFileSet(), specs.specs[0])
+				l1 := pass.Fset.Position(specs.pos).Line
+				l2 := pass.Fset.Position(specs.end).Line
+				if l1 == l2 {
+					continue
+				}
+				pass.Report(analysis.Diagnostic{
+					Pos:      specs.pos,
+					End:      specs.end,
+					Category: "names",
+					Message:  "grouped vars",
+					SuggestedFixes: []analysis.SuggestedFix{
+						{
+							Message: "grouped vars",
+							TextEdits: []analysis.TextEdit{
+								{
+									Pos:     specs.pos,
+									End:     specs.end,
+									NewText: b.Bytes(),
+								},
+							},
+						},
+					},
+					Related: nil,
+				})
+			}
 			if len(specs.specs) < 2 {
 				continue
 			}
