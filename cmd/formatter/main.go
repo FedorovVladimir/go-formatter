@@ -37,11 +37,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	var formatters []*analysis.Analyzer
+
+	var formatters1 []*analysis.Analyzer
 	for _, formatter := range c.Formatters {
 		if formatter.On {
-			formatters = append(formatters, m[formatter.Name])
+			formatters1 = append(formatters1, m[formatter.Name])
 		}
 	}
-	multichecker.Main(formatters...)
+	multichecker.Main(formatters1...)
 }

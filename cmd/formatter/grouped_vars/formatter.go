@@ -106,6 +106,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				if l1 == l2 {
 					continue
 				}
+				out := b.String()
 				pass.Report(analysis.Diagnostic{
 					Pos:      specs.pos,
 					End:      specs.end,
@@ -118,7 +119,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 								{
 									Pos:     specs.pos,
 									End:     specs.end,
-									NewText: b.Bytes(),
+									NewText: []byte(out),
 								},
 							},
 						},
