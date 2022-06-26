@@ -1,4 +1,4 @@
-module git.user-penguin.space/vladimir/go-formatter
+module github.com/FedorovVladimir/go-formatter
 
 go 1.18
 

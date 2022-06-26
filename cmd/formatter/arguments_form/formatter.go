@@ -2,6 +2,7 @@ package arguments_form
 
 import (
 	"go/ast"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -28,9 +29,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		result := ""
 		e := n.(*ast.FuncDecl)
-		if e.Type.Params.NumFields() < 2 {
-			return
-		}
 		startPos := e.Type.Params.Pos()
 		endPos := e.Type.Params.End()
 		parameters := e.Type.Params.List
@@ -42,6 +40,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				}
 			}
 		}
+		result = strings.TrimSuffix(result, ",")
 		result = "(" + result + ")"
 		pass.Report(analysis.Diagnostic{
 			Pos:      e.Body.Pos(),

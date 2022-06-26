@@ -1,3 +1,3 @@
 package a
 
-func main() {}
+func main() {} // want "arguments form"
