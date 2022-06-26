@@ -37,6 +37,14 @@
       "on": true
     },
     {
+      "name": "arguments_form",
+      "on": true
+    },
+    {
+      "name": "return_value",
+      "on": true
+    },
+    {
       "name": "order",
       "on": true
     }
