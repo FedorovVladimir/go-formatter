@@ -317,6 +317,74 @@ func WithCarColor(color string) {}
 func withCarPrice(price float64) {}
 ```
 
+### arguments_form
+
+До
+
+```go
+func argumentsForm(a, b, c int) {
+
+}
+```
+
+После
+
+```go
+package a
+
+func argumentsForm(a int, b int, c int) {
+
+}
+```
+
+### return_value
+
+До
+
+```go
+package a
+
+func returnValue(a, b int) (e int, d bool) { // want "return value"
+	return a + b, a > b
+}
+```
+
+После
+
+```go
+package a
+
+func returnValue(a, b int) (int, bool) { // want "return value"
+	return a + b, a > b
+}
+```
+
+### order
+
+До
+
+```go
+package main
+
+var v1 = "v1"
+
+type e struct{}
+
+var v2 = "v2"
+```
+
+После
+
+```go
+package main
+
+var v1 = "v1"
+
+var v2 = "v2"
+
+type e struct{}
+```
+
 ## Как пользоваться
 
 ### Запуск
@@ -324,13 +392,13 @@ func withCarPrice(price float64) {}
 Для запуска на весь проект
 
 ```shell
-myfmt -fix .
+go-formatter -fix .
 ```
 
 Для запуска на отдельную директорию
 
 ```shell
-myfmt -fix DIR_PATH
+go-formatter -fix DIR_PATH
 ```
 
 Также команду можно выполнять по сохранению или на git pre_commit hook
