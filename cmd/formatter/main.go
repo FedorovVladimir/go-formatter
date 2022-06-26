@@ -10,6 +10,7 @@ import (
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/many_arguments"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/methods_with_star_and_rename"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/new_line"
+	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/order"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/rm_ignore_vars"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/start_enums_at_one"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/with"
@@ -24,6 +25,7 @@ var m = map[string]*analysis.Analyzer{
 	"many_arguments":               many_arguments.Analyzer,
 	"methods_with_star_and_rename": methods_with_star_and_rename.Analyzer,
 	"new_line":                     new_line.Analyzer,
+	"order":                        order.Analyzer,
 	"rm_ignore_vars":               rm_ignore_vars.Analyzer,
 	"start_enums_at_one":           start_enums_at_one.Analyzer,
 	"with":                         with.Analyzer,

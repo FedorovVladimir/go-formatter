@@ -1,6 +1,11 @@
 {
   "formatters": [
     {
+      "name": "order",
+      "on": true,
+      "parameter": []
+    },
+    {
       "name": "context_first_parameter",
       "on": true,
       "parameter": []

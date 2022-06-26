@@ -1,0 +1,10 @@
+package main
+
+var v1 = "v1" // want "order"
+// want "order"
+
+var v2 = "v2" // want "order"
+// want "order"
+
+type e struct{} // want "order"
+// want "order"
