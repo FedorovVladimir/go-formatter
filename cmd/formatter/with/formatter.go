@@ -32,7 +32,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		if !strings.Contains(name, "With") {
 			return
 		}
-		name = "With" + strings.Replace(name, "With", "", 1)
+		if name[0] <= 'z' && name[0] >= 'a' {
+			name = "with" + strings.Title(strings.Replace(name, "With", "", 1))
+		} else {
+			name = "With" + strings.Replace(name, "With", "", 1)
+		}
 		pass.Report(analysis.Diagnostic{
 			Pos:      e.Name.Pos(),
 			End:      e.Name.End(),
