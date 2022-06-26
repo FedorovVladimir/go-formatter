@@ -2,6 +2,7 @@ package arguments_form
 
 import (
 	"go/ast"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -23,9 +24,9 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	var result string
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
+		result := ""
 		e := n.(*ast.FuncDecl)
 		if e.Type.Params.NumFields() < 2 {
 			return
@@ -35,7 +36,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		parameters := e.Type.Params.List
 		for i := 0; i < len(parameters); i++ {
 			for j := 0; j < len(parameters[i].Names); j++ {
-				result = result + parameters[i].Names[j].Name + " " + parameters[i].Type.(*ast.Ident).Name + ","
+				t, ok := parameters[i].Type.(*ast.Ident)
+				if ok {
+					result = result + parameters[i].Names[j].Name + " " + t.Name + ","
+				}
 			}
 		}
 		result = "(" + result + ")"

@@ -2,6 +2,8 @@ package many_arguments
 
 import (
 	"go/ast"
+	"strings"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -27,9 +29,9 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	var result string = "\n"
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
+		result := "\n"
 		e := n.(*ast.FuncDecl)
 		if e.Type.Params.NumFields() < 2 {
 			return
@@ -45,22 +47,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					continue
 				}
 				sel := p.Sel
-				if x.Name+"."+sel.Name == "context.Context" {
-					result = result + parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + " ,\n"
-				} else {
-					result = result + " " + parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + ",\n"
-				}
+				result = result + parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + ",\n"
 			case *ast.Ident:
-				if i != len(parameters)-1 {
-					result = result + parameters[i].Names[0].Name + " " + p.Name + ",\n" + " "
-				} else {
-					result = result + parameters[i].Names[0].Name + " " + p.Name + ","
-				}
+				result = result + parameters[i].Names[0].Name + " " + p.Name + ",\n"
 			default:
 				panic("wow u a lox")
 			}
-
 		}
+		result = strings.TrimSuffix(result, "\n")
 		result = "(" + result + "\n)"
 		pass.Report(analysis.Diagnostic{
 			Pos:      e.Body.Pos(),

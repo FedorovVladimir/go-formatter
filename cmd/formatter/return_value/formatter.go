@@ -2,6 +2,7 @@ package return_value
 
 import (
 	"go/ast"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -27,6 +28,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		e := n.(*ast.FuncDecl)
 		if e.Type.Params.NumFields() < 2 {
+			return
+		}
+		if e.Type.Results == nil {
 			return
 		}
 		startPos := e.Type.Results.Pos()

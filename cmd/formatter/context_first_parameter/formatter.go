@@ -2,6 +2,8 @@ package context_first_parameter
 
 import (
 	"go/ast"
+	"strings"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -23,9 +25,9 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	var result string
 	nodeFilter := []ast.Node{(*ast.FuncDecl)(nil)}
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
+		var result string
 		e := n.(*ast.FuncDecl)
 		if e.Type.Params.NumFields() < 2 {
 			return
@@ -42,20 +44,18 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				}
 				sel := p.Sel
 				if x.Name+"."+sel.Name == "context.Context" {
-					result = parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + result
+					result = parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + ", " + result
 				} else {
-					result = result + " " + parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name
+					result = result + " " + parameters[i].Names[0].Name + " " + x.Name + "." + sel.Name + ", "
 				}
 			case *ast.Ident:
-				if i == 0 {
-					result = result + ", "
-				}
-				result = result + parameters[i].Names[0].Name + " " + p.Name
+				result = result + parameters[i].Names[0].Name + " " + p.Name + ", "
 			default:
 				panic("wow u a lox")
 			}
 
 		}
+		result = strings.TrimSuffix(result, ", ")
 		result = "(" + result + ")"
 		pass.Report(analysis.Diagnostic{
 			Pos:      e.Body.Pos(),
