@@ -2,53 +2,43 @@
   "formatters": [
     {
       "name": "order",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "context_first_parameter",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "empty_func_body",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "grouped_vars",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "many_arguments",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "methods_with_star_and_rename",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "new_line",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "rm_ignore_vars",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "start_enums_at_one",
-      "on": true,
-      "parameter": []
+      "on": true
     },
     {
       "name": "with",
-      "on": true,
-      "parameter": []
+      "on": true
     }
   ]
 }
