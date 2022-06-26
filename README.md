@@ -344,7 +344,7 @@ func argumentsForm(a int, b int, c int) {
 ```go
 package a
 
-func returnValue(a, b int) (e int, d bool) { // want "return value"
+func returnValue(a, b int) (e int, d bool) {
 	return a + b, a > b
 }
 ```
@@ -354,7 +354,7 @@ func returnValue(a, b int) (e int, d bool) { // want "return value"
 ```go
 package a
 
-func returnValue(a, b int) (int, bool) { // want "return value"
+func returnValue(a, b int) (int, bool) {
 	return a + b, a > b
 }
 ```
