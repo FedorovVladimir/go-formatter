@@ -1,3 +1,3 @@
 package a
 
-func CarWithColor(color string) {} // want "rename func"
+func carWithColor(color string) {} // want "rename func"
