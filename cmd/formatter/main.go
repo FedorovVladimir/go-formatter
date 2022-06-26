@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/arguments_form"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/config"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/context_first_parameter"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/empty_func_body"
@@ -11,6 +12,7 @@ import (
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/methods_with_star_and_rename"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/new_line"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/order"
+	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/return_value"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/rm_ignore_vars"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/start_enums_at_one"
 	"git.user-penguin.space/vladimir/go-formatter/cmd/formatter/with"
@@ -29,6 +31,8 @@ var m = map[string]*analysis.Analyzer{
 	"rm_ignore_vars":               rm_ignore_vars.Analyzer,
 	"start_enums_at_one":           start_enums_at_one.Analyzer,
 	"with":                         with.Analyzer,
+	"arguments_form":               arguments_form.Analyzer,
+	"return_value":                 return_value.Analyzer,
 }
 
 func main() {
