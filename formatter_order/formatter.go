@@ -2,6 +2,7 @@ package formatter_order
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/printer"
 	"go/token"
@@ -86,7 +87,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 		},
 	)
-	end := token.Pos(pass.Fset.File(lastPosition.end).Size())
+	f := pass.Fset.File(lastPosition.end)
+	end := token.Pos(f.Base() + f.Size())
 	lastPosition.end = end
 
 	i := 0
@@ -133,4 +135,6 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		},
 		Related: nil,
 	})
+	f := pass.Fset.File(pos)
+	fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, text)
 }
