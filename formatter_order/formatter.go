@@ -1,6 +1,7 @@
 package formatter_order
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"io"
@@ -83,19 +84,19 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 
 			if data[currentFile].lastNode != nil {
-				data[currentFile].lastNode.end = n.Pos() - 1
+				data[currentFile].lastNode.end = getPos(n) - 1
 			}
 			if data[currentFile].lastPosition != nil {
-				data[currentFile].lastPosition.end = n.Pos() - 1
+				data[currentFile].lastPosition.end = getPos(n) - 1
 			}
 
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+				data[currentFile].lastNode = &position{pos: getPos(e), end: e.End(), filename: currentFile.Name()}
 				d := selectDeclForFunc(e.Name)
 				data[currentFile].groups[d] = append(data[currentFile].groups[d], data[currentFile].lastNode)
 
-				data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+				data[currentFile].lastPosition = &position{pos: getPos(e), end: e.End()}
 				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
@@ -145,6 +146,18 @@ func selectDeclForFunc(name *ast.Ident) decl {
 	return privateFuncDecl
 }
 
+func getPos(n ast.Node) token.Pos {
+	switch e := n.(type) {
+	case *ast.FuncDecl:
+		if e.Doc != nil {
+			return e.Doc.Pos()
+		}
+		return e.Pos()
+	default:
+		return n.Pos()
+	}
+}
+
 func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (bool, int) {
 	if nodes, ok := groups[decl]; ok {
 		for _, node := range nodes {
@@ -157,6 +170,7 @@ func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[d
 			node.end = token.Pos(int(node.end) - f.Base())
 			fileBytes, _ := readFile(node.filename)
 			text := fileBytes[node.pos:node.end]
+			fmt.Println("GOV:", string(text), ":NO")
 
 			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
 			i++
