@@ -20,7 +20,12 @@ const (
 	funcDecl
 )
 
-var orderDecl = []decl{constDecl, varDecl, typeDecl, funcDecl}
+var orderDecl = []decl{
+	constDecl,
+	varDecl,
+	typeDecl,
+	funcDecl,
+}
 
 var tokenToDecl = map[token.Token]decl{
 	token.CONST: constDecl,
