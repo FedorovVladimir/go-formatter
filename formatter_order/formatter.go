@@ -13,8 +13,6 @@ import (
 
 const Doc = `formatter_order`
 
-type decl int
-
 const (
 	constDecl decl = iota + 1
 	varDecl
@@ -30,6 +28,8 @@ var Analyzer = &analysis.Analyzer{
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
+
+type decl int
 
 type position struct {
 	pos      token.Pos
@@ -196,8 +196,6 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		},
 		Related: nil,
 	})
-	// f := pass.Fset.File(pos)
-	// fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, string(text))
 }
 
 func readFile(path string) ([]byte, error) {
