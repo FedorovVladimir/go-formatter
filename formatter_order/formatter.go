@@ -1,11 +1,10 @@
 package formatter_order
 
 import (
-	"bytes"
-	"fmt"
 	"go/ast"
-	"go/printer"
 	"go/token"
+	"io"
+	"os"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -33,19 +32,22 @@ var Analyzer = &analysis.Analyzer{
 }
 
 type position struct {
-	pos token.Pos
-	end token.Pos
+	pos      token.Pos
+	end      token.Pos
+	filename string
 }
 
 type fileData struct {
-	groups       map[decl][]ast.Node
+	groups       map[decl][]*position
+	lastNode     *position
 	positions    []*position
 	lastPosition *position
 }
 
 func newFileData() *fileData {
 	return &fileData{
-		groups:       map[decl][]ast.Node{},
+		groups:       map[decl][]*position{},
+		lastNode:     nil,
 		positions:    []*position{},
 		lastPosition: nil,
 	}
@@ -61,10 +63,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if _, ok := data[currentFile]; !ok {
 				data[currentFile] = newFileData()
 			}
-
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], e)
+				if data[currentFile].lastNode != nil {
+					data[currentFile].lastNode.end = e.Pos() - 1
+				}
+				data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+				data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], data[currentFile].lastNode)
+
 				if data[currentFile].lastPosition != nil {
 					data[currentFile].lastPosition.end = e.Pos() - 1
 				}
@@ -73,7 +79,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			case *ast.GenDecl:
 				switch e.Tok {
 				case token.CONST:
-					data[currentFile].groups[constDecl] = append(data[currentFile].groups[constDecl], e)
+					if data[currentFile].lastNode != nil {
+						data[currentFile].lastNode.end = e.Pos() - 1
+					}
+					data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].groups[constDecl] = append(data[currentFile].groups[constDecl], data[currentFile].lastNode)
+
 					if data[currentFile].lastPosition != nil {
 						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
@@ -83,21 +94,37 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					if currentFile.Position(e.Pos()).Column != 1 {
 						return
 					}
-					data[currentFile].groups[varDecl] = append(data[currentFile].groups[varDecl], e)
+
+					if data[currentFile].lastNode != nil {
+						data[currentFile].lastNode.end = e.Pos() - 1
+					}
+					data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].groups[varDecl] = append(data[currentFile].groups[varDecl], data[currentFile].lastNode)
+
 					if data[currentFile].lastPosition != nil {
 						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
 					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
 					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.TYPE:
-					data[currentFile].groups[typeDecl] = append(data[currentFile].groups[typeDecl], e)
+					if data[currentFile].lastNode != nil {
+						data[currentFile].lastNode.end = e.Pos() - 1
+					}
+					data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].groups[typeDecl] = append(data[currentFile].groups[typeDecl], data[currentFile].lastNode)
+
 					if data[currentFile].lastPosition != nil {
 						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
 					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
 					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.FUNC:
-					data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], e)
+					if data[currentFile].lastNode != nil {
+						data[currentFile].lastNode.end = e.Pos() - 1
+					}
+					data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], data[currentFile].lastNode)
+
 					if data[currentFile].lastPosition != nil {
 						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
@@ -109,9 +136,21 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	)
 
 	for file := range data {
-		f := pass.Fset.File(data[file].lastPosition.end)
+		f := pass.Fset.File(data[file].lastPosition.pos)
 		end := token.Pos(f.Base() + f.Size())
-		data[file].lastPosition.end = end
+		data[file].lastPosition.end = end - 1
+
+		f = pass.Fset.File(data[file].lastNode.pos)
+		end = token.Pos(f.Base() + f.Size())
+		data[file].lastNode.end = end
+
+		d := data[file]
+		for _, g := range d.groups {
+			for _, n := range g {
+				n.pos = token.Pos(int(n.pos) - f.Base())
+				n.end = token.Pos(int(n.end) - f.Base())
+			}
+		}
 
 		i := 0
 		for _, decl := range orderDecl {
@@ -124,13 +163,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]ast.Node, decl decl) (bool, int) {
+func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl) (bool, int) {
 	if nodes, ok := groups[decl]; ok {
 		for _, node := range nodes {
-			var b bytes.Buffer
-			_ = printer.Fprint(&b, token.NewFileSet(), node)
-			b.Write([]byte("\n"))
-			report(pass, positions[i].pos, positions[i].end, b.Bytes(), "formatter_order")
+			d, _ := readFile(node.filename)
+			text := d[node.pos:node.end]
+			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
 			i++
 		}
 		return true, i
@@ -158,6 +196,26 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		},
 		Related: nil,
 	})
-	f := pass.Fset.File(pos)
-	fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, string(text))
+	// f := pass.Fset.File(pos)
+	// fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, string(text))
+}
+
+func readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	data := make([]byte, 64)
+	str := ""
+	for {
+		fl, err := file.Read(data)
+		if err == io.EOF {
+			break
+		}
+		str += string(data[:fl])
+	}
+
+	return []byte(str), nil
 }

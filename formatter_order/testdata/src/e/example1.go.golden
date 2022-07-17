@@ -6,6 +6,6 @@ const name = "Vova" // want "formatter_order"
 
 var helloText = "hello" // want "formatter_order"
 
-func main() {
+func main() { // want "formatter_order"
 	fmt.Println(helloText, name)
 }
