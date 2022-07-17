@@ -127,7 +127,7 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 				TextEdits: []analysis.TextEdit{
 					{
 						Pos:     pos,
-						End:     end,
+						End:     end - 1,
 						NewText: text,
 					},
 				},
@@ -136,5 +136,5 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		Related: nil,
 	})
 	f := pass.Fset.File(pos)
-	fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, text)
+	fmt.Println("GOV", f.Position(pos).Line, f.Position(pos).Column, f.Position(end).Line, f.Position(end).Column, string(text))
 }
