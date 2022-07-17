@@ -5,6 +5,7 @@ import (
 	"go/token"
 	"io"
 	"os"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -17,7 +18,9 @@ const (
 	constDecl decl = iota + 1
 	varDecl
 	typeDecl
+	constructorFuncDecl
 	funcDecl
+	privateConstructorFuncDecl
 	privateFuncDecl
 )
 
@@ -25,7 +28,9 @@ var orderDecl = []decl{
 	constDecl,
 	varDecl,
 	typeDecl,
+	constructorFuncDecl,
 	funcDecl,
+	privateConstructorFuncDecl,
 	privateFuncDecl,
 }
 
@@ -87,10 +92,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			switch e := n.(type) {
 			case *ast.FuncDecl:
 				data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
-				d := privateFuncDecl
-				if e.Name.IsExported() {
-					d = funcDecl
-				}
+				d := selectDeclForFunc(e.Name)
 				data[currentFile].groups[d] = append(data[currentFile].groups[d], data[currentFile].lastNode)
 
 				data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
@@ -127,6 +129,20 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	return nil, nil
+}
+
+func selectDeclForFunc(name *ast.Ident) decl {
+	n := name.Name
+	if strings.HasPrefix(n, "New") {
+		return constructorFuncDecl
+	}
+	if strings.HasPrefix(n, "new") {
+		return privateConstructorFuncDecl
+	}
+	if name.IsExported() {
+		return funcDecl
+	}
+	return privateFuncDecl
 }
 
 func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (bool, int) {

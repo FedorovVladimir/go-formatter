@@ -1,0 +1,20 @@
+package main
+
+import "fmt"
+
+func NewHello1() { // want "formatter_order"
+
+}
+
+func Hello() {
+
+}
+
+func newHello2() { // want "formatter_order"
+
+}
+
+func main() { // want "formatter_order"
+	var a int
+	fmt.Println(a)
+}
