@@ -61,6 +61,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if _, ok := data[currentFile]; !ok {
 				data[currentFile] = newFileData()
 			}
+
 			switch e := n.(type) {
 			case *ast.FuncDecl:
 				data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], e)
