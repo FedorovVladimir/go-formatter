@@ -38,29 +38,50 @@ type position struct {
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	groups := map[decl][]ast.Node{}
-	var positions []position
+	var positions []*position
 
+	var lastPosition *position
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(
 		[]ast.Node{(*ast.GenDecl)(nil), (*ast.FuncDecl)(nil)},
 		func(n ast.Node) {
 			switch e := n.(type) {
 			case *ast.FuncDecl:
 				groups[funcDecl] = append(groups[funcDecl], e)
-				positions = append(positions, position{pos: e.Pos(), end: e.End()})
+				if lastPosition != nil {
+					lastPosition.end = e.Pos()
+				}
+				lastPosition = &position{pos: e.Pos(), end: e.End()}
+				positions = append(positions, lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
 				case token.CONST:
 					groups[constDecl] = append(groups[constDecl], e)
-					positions = append(positions, position{pos: e.Pos(), end: e.End()})
+					if lastPosition != nil {
+						lastPosition.end = e.Pos()
+					}
+					lastPosition = &position{pos: e.Pos(), end: e.End()}
+					positions = append(positions, lastPosition)
 				case token.VAR:
 					groups[varDecl] = append(groups[varDecl], e)
-					positions = append(positions, position{pos: e.Pos(), end: e.End()})
+					if lastPosition != nil {
+						lastPosition.end = e.Pos()
+					}
+					lastPosition = &position{pos: e.Pos(), end: e.End()}
+					positions = append(positions, lastPosition)
 				case token.TYPE:
 					groups[typeDecl] = append(groups[typeDecl], e)
-					positions = append(positions, position{pos: e.Pos(), end: e.End()})
+					if lastPosition != nil {
+						lastPosition.end = e.Pos()
+					}
+					lastPosition = &position{pos: e.Pos(), end: e.End()}
+					positions = append(positions, lastPosition)
 				case token.FUNC:
 					groups[funcDecl] = append(groups[funcDecl], e)
-					positions = append(positions, position{pos: e.Pos(), end: e.End()})
+					if lastPosition != nil {
+						lastPosition.end = e.Pos()
+					}
+					lastPosition = &position{pos: e.Pos(), end: e.End()}
+					positions = append(positions, lastPosition)
 				}
 			}
 		},
@@ -76,11 +97,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func reportGroup(pass *analysis.Pass, positions []position, i int, groups map[decl][]ast.Node, decl decl) (bool, int) {
+func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]ast.Node, decl decl) (bool, int) {
 	if nodes, ok := groups[decl]; ok {
 		for _, node := range nodes {
 			var b bytes.Buffer
 			_ = printer.Fprint(&b, token.NewFileSet(), node)
+			b.Write([]byte("\n"))
 			report(pass, positions[i].pos, positions[i].end, b.Bytes(), "formatter_order")
 			i++
 		}
