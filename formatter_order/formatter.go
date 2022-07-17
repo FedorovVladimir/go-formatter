@@ -49,7 +49,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			case *ast.FuncDecl:
 				groups[funcDecl] = append(groups[funcDecl], e)
 				if lastPosition != nil {
-					lastPosition.end = e.Pos()
+					lastPosition.end = e.Pos() - 1
 				}
 				lastPosition = &position{pos: e.Pos(), end: e.End()}
 				positions = append(positions, lastPosition)
@@ -58,28 +58,28 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				case token.CONST:
 					groups[constDecl] = append(groups[constDecl], e)
 					if lastPosition != nil {
-						lastPosition.end = e.Pos()
+						lastPosition.end = e.Pos() - 1
 					}
 					lastPosition = &position{pos: e.Pos(), end: e.End()}
 					positions = append(positions, lastPosition)
 				case token.VAR:
 					groups[varDecl] = append(groups[varDecl], e)
 					if lastPosition != nil {
-						lastPosition.end = e.Pos()
+						lastPosition.end = e.Pos() - 1
 					}
 					lastPosition = &position{pos: e.Pos(), end: e.End()}
 					positions = append(positions, lastPosition)
 				case token.TYPE:
 					groups[typeDecl] = append(groups[typeDecl], e)
 					if lastPosition != nil {
-						lastPosition.end = e.Pos()
+						lastPosition.end = e.Pos() - 1
 					}
 					lastPosition = &position{pos: e.Pos(), end: e.End()}
 					positions = append(positions, lastPosition)
 				case token.FUNC:
 					groups[funcDecl] = append(groups[funcDecl], e)
 					if lastPosition != nil {
-						lastPosition.end = e.Pos()
+						lastPosition.end = e.Pos() - 1
 					}
 					lastPosition = &position{pos: e.Pos(), end: e.End()}
 					positions = append(positions, lastPosition)
@@ -127,7 +127,7 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 				TextEdits: []analysis.TextEdit{
 					{
 						Pos:     pos,
-						End:     end - 1,
+						End:     end,
 						NewText: text,
 					},
 				},
