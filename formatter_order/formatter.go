@@ -18,8 +18,8 @@ const (
 	constDecl decl = iota + 1
 	varDecl
 	typeDecl
-	constructorFuncDecl
-	funcDecl
+	publicConstructorFuncDecl
+	publicFuncDecl
 	privateConstructorFuncDecl
 	privateFuncDecl
 )
@@ -28,8 +28,8 @@ var orderDecl = []decl{
 	constDecl,
 	varDecl,
 	typeDecl,
-	constructorFuncDecl,
-	funcDecl,
+	publicConstructorFuncDecl,
+	publicFuncDecl,
 	privateConstructorFuncDecl,
 	privateFuncDecl,
 }
@@ -134,13 +134,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 func selectDeclForFunc(name *ast.Ident) decl {
 	n := name.Name
 	if strings.HasPrefix(n, "New") {
-		return constructorFuncDecl
+		return publicConstructorFuncDecl
 	}
 	if strings.HasPrefix(n, "new") {
 		return privateConstructorFuncDecl
 	}
 	if name.IsExported() {
-		return funcDecl
+		return publicFuncDecl
 	}
 	return privateFuncDecl
 }
