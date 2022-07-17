@@ -18,6 +18,7 @@ const (
 	varDecl
 	typeDecl
 	funcDecl
+	privateFuncDecl
 )
 
 var orderDecl = []decl{
@@ -25,13 +26,13 @@ var orderDecl = []decl{
 	varDecl,
 	typeDecl,
 	funcDecl,
+	privateFuncDecl,
 }
 
 var tokenToDecl = map[token.Token]decl{
 	token.CONST: constDecl,
 	token.VAR:   varDecl,
 	token.TYPE:  typeDecl,
-	token.FUNC:  funcDecl,
 }
 
 var Analyzer = &analysis.Analyzer{
@@ -86,13 +87,17 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			switch e := n.(type) {
 			case *ast.FuncDecl:
 				data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
-				data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], data[currentFile].lastNode)
+				d := privateFuncDecl
+				if e.Name.IsExported() {
+					d = funcDecl
+				}
+				data[currentFile].groups[d] = append(data[currentFile].groups[d], data[currentFile].lastNode)
 
 				data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
 				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
-				case token.CONST, token.VAR, token.TYPE, token.FUNC:
+				case token.CONST, token.VAR, token.TYPE:
 					if currentFile.Position(e.Pos()).Column != 1 {
 						return
 					}
