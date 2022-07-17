@@ -86,6 +86,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 		},
 	)
+	end := token.Pos(pass.Fset.File(lastPosition.end).Size())
+	lastPosition.end = end
 
 	i := 0
 	for _, decl := range orderDecl {
