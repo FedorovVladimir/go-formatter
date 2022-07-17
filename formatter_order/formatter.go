@@ -80,6 +80,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
 					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.VAR:
+					if currentFile.Position(e.Pos()).Column != 1 {
+						return
+					}
 					data[currentFile].groups[varDecl] = append(data[currentFile].groups[varDecl], e)
 					if data[currentFile].lastPosition != nil {
 						data[currentFile].lastPosition.end = e.Pos() - 1
