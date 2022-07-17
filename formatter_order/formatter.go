@@ -139,22 +139,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		f := pass.Fset.File(data[file].lastPosition.pos)
 		end := token.Pos(f.Base() + f.Size())
 		data[file].lastPosition.end = end - 1
-
-		f = pass.Fset.File(data[file].lastNode.pos)
-		end = token.Pos(f.Base() + f.Size())
 		data[file].lastNode.end = end
-
-		d := data[file]
-		for _, g := range d.groups {
-			for _, n := range g {
-				n.pos = token.Pos(int(n.pos) - f.Base())
-				n.end = token.Pos(int(n.end) - f.Base())
-			}
-		}
 
 		i := 0
 		for _, decl := range orderDecl {
-			if ok, k := reportGroup(pass, data[file].positions, i, data[file].groups, decl); ok {
+			if ok, k := reportGroup(pass, data[file].positions, i, data[file].groups, decl, f); ok {
 				i = k
 			}
 		}
@@ -163,11 +152,19 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl) (bool, int) {
+func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (bool, int) {
 	if nodes, ok := groups[decl]; ok {
 		for _, node := range nodes {
+			if node.pos == positions[i].pos {
+				i++
+				continue
+			}
+
+			node.pos = token.Pos(int(node.pos) - f.Base())
+			node.end = token.Pos(int(node.end) - f.Base())
 			d, _ := readFile(node.filename)
 			text := d[node.pos:node.end]
+
 			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
 			i++
 		}

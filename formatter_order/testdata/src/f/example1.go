@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func main() { // want "formatter_order"
+func main() {
 	var a int
 	fmt.Println(a)
 }

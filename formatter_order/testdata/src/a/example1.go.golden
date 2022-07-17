@@ -1,8 +1,8 @@
 package main
 
-const c = "c" // want "formatter_order"
+const c = "c"
 
-var v = "v" // want "formatter_order"
+var v = "v"
 
-func a() { // want "formatter_order"
+func a() {
 }
