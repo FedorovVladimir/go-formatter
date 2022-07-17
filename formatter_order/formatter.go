@@ -78,29 +78,32 @@ func work(pass *analysis.Pass, positions []position, i int, m map[decl][]ast.Nod
 		for _, node := range c {
 			var b bytes.Buffer
 			_ = printer.Fprint(&b, token.NewFileSet(), node)
-			s := b.String()
-			pass.Report(analysis.Diagnostic{
-				Pos:      positions[i].pos,
-				End:      positions[i].end,
-				Category: "func",
-				Message:  "formatter_order",
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						Message: "formatter_order",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     positions[i].pos,
-								End:     positions[i].end,
-								NewText: []byte(s),
-							},
-						},
-					},
-				},
-				Related: nil,
-			})
+			report(pass, positions[i].pos, positions[i].end, b.Bytes(), "formatter_order")
 			i++
 		}
 		return true, i
 	}
 	return false, i
+}
+
+func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg string) {
+	pass.Report(analysis.Diagnostic{
+		Pos:      pos,
+		End:      end,
+		Category: msg,
+		Message:  msg,
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message: msg,
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     pos,
+						End:     end,
+						NewText: text,
+					},
+				},
+			},
+		},
+		Related: nil,
+	})
 }
