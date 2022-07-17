@@ -37,64 +37,83 @@ type position struct {
 	end token.Pos
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
-	groups := map[decl][]ast.Node{}
-	var positions []*position
+type fileData struct {
+	groups       map[decl][]ast.Node
+	positions    []*position
+	lastPosition *position
+}
 
-	var lastPosition *position
+func newFileData() *fileData {
+	return &fileData{
+		groups:       map[decl][]ast.Node{},
+		positions:    []*position{},
+		lastPosition: nil,
+	}
+}
+
+func run(pass *analysis.Pass) (interface{}, error) {
+	data := map[*token.File]*fileData{}
+
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(
 		[]ast.Node{(*ast.GenDecl)(nil), (*ast.FuncDecl)(nil)},
 		func(n ast.Node) {
+			currentFile := pass.Fset.File(n.Pos())
+			if _, ok := data[currentFile]; !ok {
+				data[currentFile] = newFileData()
+			}
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				groups[funcDecl] = append(groups[funcDecl], e)
-				if lastPosition != nil {
-					lastPosition.end = e.Pos() - 1
+				data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], e)
+				if data[currentFile].lastPosition != nil {
+					data[currentFile].lastPosition.end = e.Pos() - 1
 				}
-				lastPosition = &position{pos: e.Pos(), end: e.End()}
-				positions = append(positions, lastPosition)
+				data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
 				case token.CONST:
-					groups[constDecl] = append(groups[constDecl], e)
-					if lastPosition != nil {
-						lastPosition.end = e.Pos() - 1
+					data[currentFile].groups[constDecl] = append(data[currentFile].groups[constDecl], e)
+					if data[currentFile].lastPosition != nil {
+						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
-					lastPosition = &position{pos: e.Pos(), end: e.End()}
-					positions = append(positions, lastPosition)
+					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.VAR:
-					groups[varDecl] = append(groups[varDecl], e)
-					if lastPosition != nil {
-						lastPosition.end = e.Pos() - 1
+					data[currentFile].groups[varDecl] = append(data[currentFile].groups[varDecl], e)
+					if data[currentFile].lastPosition != nil {
+						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
-					lastPosition = &position{pos: e.Pos(), end: e.End()}
-					positions = append(positions, lastPosition)
+					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.TYPE:
-					groups[typeDecl] = append(groups[typeDecl], e)
-					if lastPosition != nil {
-						lastPosition.end = e.Pos() - 1
+					data[currentFile].groups[typeDecl] = append(data[currentFile].groups[typeDecl], e)
+					if data[currentFile].lastPosition != nil {
+						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
-					lastPosition = &position{pos: e.Pos(), end: e.End()}
-					positions = append(positions, lastPosition)
+					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				case token.FUNC:
-					groups[funcDecl] = append(groups[funcDecl], e)
-					if lastPosition != nil {
-						lastPosition.end = e.Pos() - 1
+					data[currentFile].groups[funcDecl] = append(data[currentFile].groups[funcDecl], e)
+					if data[currentFile].lastPosition != nil {
+						data[currentFile].lastPosition.end = e.Pos() - 1
 					}
-					lastPosition = &position{pos: e.Pos(), end: e.End()}
-					positions = append(positions, lastPosition)
+					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				}
 			}
 		},
 	)
-	f := pass.Fset.File(lastPosition.end)
-	end := token.Pos(f.Base() + f.Size())
-	lastPosition.end = end
 
-	i := 0
-	for _, decl := range orderDecl {
-		if ok, k := reportGroup(pass, positions, i, groups, decl); ok {
-			i = k
+	for file := range data {
+		f := pass.Fset.File(data[file].lastPosition.end)
+		end := token.Pos(f.Base() + f.Size())
+		data[file].lastPosition.end = end
+
+		i := 0
+		for _, decl := range orderDecl {
+			if ok, k := reportGroup(pass, data[file].positions, i, data[file].groups, decl); ok {
+				i = k
+			}
 		}
 	}
 
