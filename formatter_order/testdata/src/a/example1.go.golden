@@ -1,10 +1,10 @@
 package main
 
-const c = "c" // want "order"
-// want "order"
+const c = "c" // want "formatter_order"
+// want "formatter_order"
 
-var v = "v" // want "order"
-// want "order"
+var v = "v" // want "formatter_order"
+// want "formatter_order"
 
 func a() {
 }
