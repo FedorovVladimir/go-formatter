@@ -13,6 +13,17 @@ import (
 
 const Doc = `formatter_order`
 
+type decl int
+
+const (
+	constDecl decl = iota + 1
+	varDecl
+	typeDecl
+	funcDecl
+)
+
+var orderDecl = []decl{constDecl, varDecl, typeDecl, funcDecl}
+
 var Analyzer = &analysis.Analyzer{
 	Name:     "formatter_order",
 	Doc:      Doc,
@@ -27,39 +38,43 @@ type position struct {
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{(*ast.GenDecl)(nil), (*ast.FuncDecl)(nil)}
-	m := map[token.Token][]ast.Node{}
+	m := map[decl][]ast.Node{}
 	var positions []position
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(nodeFilter, func(n ast.Node) {
 		switch e := n.(type) {
 		case *ast.FuncDecl:
-			m[token.FUNC] = append(m[token.FUNC], e)
+			m[funcDecl] = append(m[funcDecl], e)
 			positions = append(positions, position{pos: e.Pos(), end: e.End()})
 		case *ast.GenDecl:
 			switch e.Tok {
-			case token.CONST, token.VAR, token.TYPE, token.FUNC:
-				m[e.Tok] = append(m[e.Tok], e)
+			case token.CONST:
+				m[constDecl] = append(m[constDecl], e)
+				positions = append(positions, position{pos: e.Pos(), end: e.End()})
+			case token.VAR:
+				m[varDecl] = append(m[varDecl], e)
+				positions = append(positions, position{pos: e.Pos(), end: e.End()})
+			case token.TYPE:
+				m[typeDecl] = append(m[typeDecl], e)
+				positions = append(positions, position{pos: e.Pos(), end: e.End()})
+			case token.FUNC:
+				m[funcDecl] = append(m[funcDecl], e)
 				positions = append(positions, position{pos: e.Pos(), end: e.End()})
 			}
 		}
 	})
+
 	i := 0
-	if ok, k := work(pass, positions, i, m, token.CONST); ok {
-		i = k
+	for _, decl := range orderDecl {
+		if ok, k := work(pass, positions, i, m, decl); ok {
+			i = k
+		}
 	}
-	if ok, k := work(pass, positions, i, m, token.VAR); ok {
-		i = k
-	}
-	if ok, k := work(pass, positions, i, m, token.TYPE); ok {
-		i = k
-	}
-	if ok, k := work(pass, positions, i, m, token.FUNC); ok {
-		i = k
-	}
+
 	return nil, nil
 }
 
-func work(pass *analysis.Pass, positions []position, i int, m map[token.Token][]ast.Node, t token.Token) (bool, int) {
-	if c, ok := m[t]; ok {
+func work(pass *analysis.Pass, positions []position, i int, m map[decl][]ast.Node, decl decl) (bool, int) {
+	if c, ok := m[decl]; ok {
 		for _, node := range c {
 			var b bytes.Buffer
 			_ = printer.Fprint(&b, token.NewFileSet(), node)
