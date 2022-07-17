@@ -1,5 +1,0 @@
-package main
-
-var _, b = "b", "b"
-
-// want "rm_ignore_vars"

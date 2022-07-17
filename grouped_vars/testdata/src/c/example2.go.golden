@@ -1,6 +1,0 @@
-package main
-
-var (
-	c = "c"
-	d = "d"
-)

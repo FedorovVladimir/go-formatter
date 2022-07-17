@@ -1,5 +1,0 @@
-package a
-
-func returnValue(a, b int) (int, bool) { // want "return value"
-	return a + b, a > b
-}
