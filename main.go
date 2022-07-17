@@ -9,7 +9,7 @@ import (
 	"golang.org/x/tools/go/analysis/multichecker"
 )
 
-var m = map[string]*analysis.Analyzer{
+var formatters = map[string]*analysis.Analyzer{
 	"formatter_order": formatter_order.Analyzer,
 }
 
@@ -22,7 +22,7 @@ func main() {
 	var enabledFormatters []*analysis.Analyzer
 	for _, formatter := range cfg.Formatters {
 		if formatter.Enabled {
-			enabledFormatters = append(enabledFormatters, m[formatter.Name])
+			enabledFormatters = append(enabledFormatters, formatters[formatter.Name])
 		}
 	}
 	multichecker.Main(enabledFormatters...)

@@ -1,7 +1,7 @@
 {
   "formatters": [
     {
-      "name": "order",
+      "name": "formatter_order",
       "enabled": true
     }
   ]
