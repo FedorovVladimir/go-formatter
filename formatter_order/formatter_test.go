@@ -65,3 +65,8 @@ func Test_Bad9(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.RunWithSuggestedFixes(t, testdata, Analyzer, "l")
 }
+
+func Test_Bad10(t *testing.T) {
+	testdata := analysistest.TestData()
+	analysistest.RunWithSuggestedFixes(t, testdata, Analyzer, "m")
+}

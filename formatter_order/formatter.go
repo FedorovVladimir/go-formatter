@@ -117,6 +117,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
+				case token.IMPORT:
+					data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+					data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
 				case token.CONST, token.VAR, token.TYPE:
 					if currentFile.Position(e.Pos()).Column != 1 {
 						return

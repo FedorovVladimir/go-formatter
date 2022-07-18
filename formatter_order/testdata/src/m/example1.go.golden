@@ -1,0 +1,13 @@
+package main
+
+// doc for file
+
+import "fmt"
+
+func Hello() { // want "formatter_order"
+
+}
+
+func main() { // want "formatter_order"
+	fmt.Println("Hello")
+}
