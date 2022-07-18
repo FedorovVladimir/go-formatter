@@ -1,7 +1,6 @@
 package formatter_order
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"io"
@@ -170,7 +169,6 @@ func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[d
 			node.end = token.Pos(int(node.end) - f.Base())
 			fileBytes, _ := readFile(node.filename)
 			text := fileBytes[node.pos:node.end]
-			fmt.Println("GOV:", string(text), ":NO")
 
 			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
 			i++
