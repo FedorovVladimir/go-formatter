@@ -74,6 +74,16 @@ func newFileData() *fileData {
 func run(pass *analysis.Pass) (interface{}, error) {
 	data := map[*token.File]*fileData{}
 
+	var comments []*position
+	for _, file := range pass.Files {
+		for _, c := range file.Comments {
+			if pass.Fset.Position(c.Pos()).Column != 1 {
+				continue
+			}
+			comments = append(comments, &position{pos: c.Pos(), end: c.End()})
+		}
+	}
+
 	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(
 		[]ast.Node{(*ast.GenDecl)(nil), (*ast.FuncDecl)(nil)},
 		func(n ast.Node) {
@@ -82,20 +92,28 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				data[currentFile] = newFileData()
 			}
 
+			var end token.Pos
 			if data[currentFile].lastNode != nil {
-				data[currentFile].lastNode.end = getPos(n) - 1
+				end = data[currentFile].lastNode.end
+			}
+			if end == token.NoPos {
+				end = token.Pos(currentFile.Base())
+			}
+			pos := getPos(n, comments, end)
+			if data[currentFile].lastNode != nil {
+				data[currentFile].lastNode.end = pos - 1
 			}
 			if data[currentFile].lastPosition != nil {
-				data[currentFile].lastPosition.end = getPos(n) - 1
+				data[currentFile].lastPosition.end = pos - 1
 			}
 
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				data[currentFile].lastNode = &position{pos: getPos(e), end: e.End(), filename: currentFile.Name()}
+				data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
 				d := selectDeclForFunc(e.Name)
 				data[currentFile].groups[d] = append(data[currentFile].groups[d], data[currentFile].lastNode)
 
-				data[currentFile].lastPosition = &position{pos: getPos(e), end: e.End()}
+				data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
 				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
@@ -104,10 +122,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 						return
 					}
 
-					data[currentFile].lastNode = &position{pos: getPos(e), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
 					data[currentFile].groups[tokenToDecl[e.Tok]] = append(data[currentFile].groups[tokenToDecl[e.Tok]], data[currentFile].lastNode)
 
-					data[currentFile].lastPosition = &position{pos: getPos(e), end: e.End()}
+					data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
 					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				}
 			}
@@ -145,21 +163,24 @@ func selectDeclForFunc(name *ast.Ident) decl {
 	return privateFuncDecl
 }
 
-func getPos(n ast.Node) token.Pos {
+func getPos(n ast.Node, comments []*position, end token.Pos) token.Pos {
+	pos := n.Pos()
 	switch e := n.(type) {
 	case *ast.FuncDecl:
 		if e.Doc != nil {
-			return e.Doc.Pos()
+			pos = e.Doc.Pos()
 		}
-		return e.Pos()
 	case *ast.GenDecl:
 		if e.Doc != nil {
-			return e.Doc.Pos()
+			pos = e.Doc.Pos()
 		}
-		return e.Pos()
-	default:
-		return n.Pos()
 	}
+	for _, comment := range comments {
+		if end < comment.pos && comment.pos < pos {
+			pos = comment.pos
+		}
+	}
+	return pos
 }
 
 func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (bool, int) {
