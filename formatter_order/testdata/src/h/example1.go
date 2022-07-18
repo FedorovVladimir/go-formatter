@@ -7,7 +7,7 @@ func main() { // want "formatter_order"
 	fmt.Println(a)
 }
 
-func Hello() {
+func Hello() { // want "formatter_order"
 
 }
 

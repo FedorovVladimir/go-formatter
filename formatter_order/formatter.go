@@ -29,8 +29,8 @@ var orderDecl = []decl{
 	varDecl,
 	typeDecl,
 	publicConstructorFuncDecl,
-	publicFuncDecl,
 	privateConstructorFuncDecl,
+	publicFuncDecl,
 	privateFuncDecl,
 }
 

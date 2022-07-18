@@ -6,11 +6,11 @@ func NewHello1() { // want "formatter_order"
 
 }
 
-func Hello() {
+func newHello2() { // want "formatter_order"
 
 }
 
-func newHello2() { // want "formatter_order"
+func Hello() { // want "formatter_order"
 
 }
 
