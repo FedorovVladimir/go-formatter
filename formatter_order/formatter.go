@@ -73,6 +73,7 @@ func newFileData() *fileData {
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		data := newFileData()
+
 		var comments []*position
 		for _, c := range file.Comments {
 			if pass.Fset.Position(c.Pos()).Column != 1 {
@@ -84,14 +85,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		for _, n := range file.Decls {
 			currentFile := pass.Fset.File(n.Pos())
 
-			var end token.Pos
+			var prevEnd token.Pos
 			if data.lastNode != nil {
-				end = data.lastNode.end
+				prevEnd = data.lastNode.end
 			}
-			if end == token.NoPos {
-				end = token.Pos(currentFile.Base())
+			if prevEnd == token.NoPos {
+				prevEnd = token.Pos(currentFile.Base())
 			}
-			pos := getPos(n, comments, end)
+			pos := getPos(n, comments, prevEnd)
 			if data.lastNode != nil {
 				data.lastNode.end = pos - 1
 			}
@@ -124,6 +125,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					data.positions = append(data.positions, data.lastPosition)
 				}
 			}
+		}
+
+		if len(data.positions) == 0 {
+			continue
 		}
 
 		f := pass.Fset.File(data.lastPosition.pos)
