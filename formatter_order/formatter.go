@@ -104,10 +104,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 						return
 					}
 
-					data[currentFile].lastNode = &position{pos: e.Pos(), end: e.End(), filename: currentFile.Name()}
+					data[currentFile].lastNode = &position{pos: getPos(e), end: e.End(), filename: currentFile.Name()}
 					data[currentFile].groups[tokenToDecl[e.Tok]] = append(data[currentFile].groups[tokenToDecl[e.Tok]], data[currentFile].lastNode)
 
-					data[currentFile].lastPosition = &position{pos: e.Pos(), end: e.End()}
+					data[currentFile].lastPosition = &position{pos: getPos(e), end: e.End()}
 					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
 				}
 			}
@@ -148,6 +148,11 @@ func selectDeclForFunc(name *ast.Ident) decl {
 func getPos(n ast.Node) token.Pos {
 	switch e := n.(type) {
 	case *ast.FuncDecl:
+		if e.Doc != nil {
+			return e.Doc.Pos()
+		}
+		return e.Pos()
+	case *ast.GenDecl:
 		if e.Doc != nil {
 			return e.Doc.Pos()
 		}

@@ -1,0 +1,12 @@
+package main
+
+// c - c // want "formatter_order"
+const c = "c"
+
+// c2 - c2 // want "formatter_order"
+const (
+	c2 = "c2"
+)
+
+func f2() { // want "formatter_order"
+}
