@@ -9,7 +9,6 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
 )
 
 const Doc = `formatter_order`
@@ -72,78 +71,69 @@ func newFileData() *fileData {
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	data := map[*token.File]*fileData{}
-
-	var comments []*position
 	for _, file := range pass.Files {
+		data := newFileData()
+		var comments []*position
 		for _, c := range file.Comments {
 			if pass.Fset.Position(c.Pos()).Column != 1 {
 				continue
 			}
 			comments = append(comments, &position{pos: c.Pos(), end: c.End()})
 		}
-	}
 
-	pass.ResultOf[inspect.Analyzer].(*inspector.Inspector).Preorder(
-		[]ast.Node{(*ast.GenDecl)(nil), (*ast.FuncDecl)(nil)},
-		func(n ast.Node) {
+		for _, n := range file.Decls {
 			currentFile := pass.Fset.File(n.Pos())
-			if _, ok := data[currentFile]; !ok {
-				data[currentFile] = newFileData()
-			}
 
 			var end token.Pos
-			if data[currentFile].lastNode != nil {
-				end = data[currentFile].lastNode.end
+			if data.lastNode != nil {
+				end = data.lastNode.end
 			}
 			if end == token.NoPos {
 				end = token.Pos(currentFile.Base())
 			}
 			pos := getPos(n, comments, end)
-			if data[currentFile].lastNode != nil {
-				data[currentFile].lastNode.end = pos - 1
+			if data.lastNode != nil {
+				data.lastNode.end = pos - 1
 			}
-			if data[currentFile].lastPosition != nil {
-				data[currentFile].lastPosition.end = pos - 1
+			if data.lastPosition != nil {
+				data.lastPosition.end = pos - 1
 			}
 
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+				data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
 				d := selectDeclForFunc(e.Name)
-				data[currentFile].groups[d] = append(data[currentFile].groups[d], data[currentFile].lastNode)
+				data.groups[d] = append(data.groups[d], data.lastNode)
 
-				data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
-				data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
+				data.lastPosition = &position{pos: pos, end: e.End()}
+				data.positions = append(data.positions, data.lastPosition)
 			case *ast.GenDecl:
 				switch e.Tok {
 				case token.IMPORT:
-					data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
-					data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
+					data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+					data.lastPosition = &position{pos: pos, end: e.End()}
 				case token.CONST, token.VAR, token.TYPE:
 					if currentFile.Position(e.Pos()).Column != 1 {
-						return
+						continue
 					}
 
-					data[currentFile].lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
-					data[currentFile].groups[tokenToDecl[e.Tok]] = append(data[currentFile].groups[tokenToDecl[e.Tok]], data[currentFile].lastNode)
+					data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+					data.groups[tokenToDecl[e.Tok]] = append(data.groups[tokenToDecl[e.Tok]], data.lastNode)
 
-					data[currentFile].lastPosition = &position{pos: pos, end: e.End()}
-					data[currentFile].positions = append(data[currentFile].positions, data[currentFile].lastPosition)
+					data.lastPosition = &position{pos: pos, end: e.End()}
+					data.positions = append(data.positions, data.lastPosition)
 				}
 			}
-		},
-	)
+		}
 
-	for file := range data {
-		f := pass.Fset.File(data[file].lastPosition.pos)
+		f := pass.Fset.File(data.lastPosition.pos)
 		end := token.Pos(f.Base() + f.Size())
-		data[file].lastPosition.end = end - 1
-		data[file].lastNode.end = end
+		data.lastPosition.end = end - 1
+		data.lastNode.end = end
 
 		i := 0
 		for _, decl := range orderDecl {
-			if ok, k := reportGroup(pass, data[file].positions, i, data[file].groups, decl, f); ok {
+			if ok, k := reportGroup(pass, data.positions, i, data.groups, decl, f); ok {
 				i = k
 			}
 		}
