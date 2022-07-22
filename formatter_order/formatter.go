@@ -137,10 +137,10 @@ func (data *fileData) appendGenDecl(pos token.Pos, e *ast.GenDecl) {
 	}
 }
 
-func (data *fileData) reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl) (int, error) {
-	if nodes, ok := groups[decl]; ok {
+func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, error) {
+	if nodes, ok := data.groups[decl]; ok {
 		for _, node := range nodes {
-			if node.pos == positions[i].pos {
+			if node.pos == data.positions[i].pos {
 				i++
 				continue
 			}
@@ -153,7 +153,7 @@ func (data *fileData) reportGroup(pass *analysis.Pass, positions []*position, i 
 			}
 			text := fileBytes[node.pos:node.end]
 
-			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
+			report(pass, data.positions[i].pos, data.positions[i].end, text, "formatter_order")
 			i++
 		}
 		return i, nil
@@ -195,7 +195,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		i := 0
 		for _, decl := range orderDecl {
-			k, err := data.reportGroup(pass, data.positions, i, data.groups, decl)
+			k, err := data.reportGroup(pass, i, decl)
 			if err != nil {
 				return nil, err
 			}
