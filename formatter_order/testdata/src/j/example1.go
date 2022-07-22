@@ -1,8 +1,8 @@
 package main
 
-func main() { // want "formatter_order"
+func main() { // want "incorrect declaration order"
 }
 
-var ( // want "formatter_order"
+var ( // want "incorrect declaration order"
 	a = "a"
 )

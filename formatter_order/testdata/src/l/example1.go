@@ -1,9 +1,9 @@
 package main
 
-func main() { // want "formatter_order"
+func main() { // want "incorrect declaration order"
 }
 
-// v - v // want "formatter_order"
+// v - v // want "incorrect declaration order"
 
 // v2 - v2
 // v3 - v3

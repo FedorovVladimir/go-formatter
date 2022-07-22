@@ -2,11 +2,11 @@ package main
 
 import "fmt"
 
-func Hello() { // want "formatter_order"
+func Hello() { // want "incorrect declaration order"
 
 }
 
-func main() { // want "formatter_order"
+func main() { // want "incorrect declaration order"
 	var a int
 	fmt.Println(a)
 }

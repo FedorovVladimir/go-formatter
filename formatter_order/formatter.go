@@ -153,7 +153,7 @@ func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, e
 			}
 			text := fileBytes[node.pos:node.end]
 
-			report(pass, data.positions[i].pos, data.positions[i].end, text, "formatter_order")
+			report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
 			i++
 		}
 		return i, nil

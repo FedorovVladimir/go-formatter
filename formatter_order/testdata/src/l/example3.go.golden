@@ -1,9 +1,9 @@
 package main
 
-// c2 - 2 // want "formatter_order"
+// c2 - 2 // want "incorrect declaration order"
 
 const c2 = "2"
 
-// v2 - 2 // want "formatter_order"
+// v2 - 2 // want "incorrect declaration order"
 
 var v2 = "2"

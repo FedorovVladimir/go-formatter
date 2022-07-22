@@ -4,10 +4,10 @@ package main
 
 import "fmt"
 
-func main() { // want "formatter_order"
+func main() { // want "incorrect declaration order"
 	fmt.Println("Hello")
 }
 
-func Hello() { // want "formatter_order"
+func Hello() { // want "incorrect declaration order"
 
 }
