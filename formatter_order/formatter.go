@@ -74,13 +74,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		data := newFileData()
 
-		var comments []*position
-		for _, c := range file.Comments {
-			if pass.Fset.Position(c.Pos()).Column != 1 {
-				continue
-			}
-			comments = append(comments, &position{pos: c.Pos(), end: c.End()})
-		}
+		comments := getComments(pass, file)
 
 		for _, n := range file.Decls {
 			currentFile := pass.Fset.File(n.Pos())
@@ -138,13 +132,26 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		i := 0
 		for _, decl := range orderDecl {
-			if ok, k := reportGroup(pass, data.positions, i, data.groups, decl, f); ok {
-				i = k
+			k, err := reportGroup(pass, data.positions, i, data.groups, decl, f)
+			if err != nil {
+				return nil, err
 			}
+			i = k
 		}
 	}
 
 	return nil, nil
+}
+
+func getComments(pass *analysis.Pass, file *ast.File) []*position {
+	comments := make([]*position, 0, len(file.Comments))
+	for _, c := range file.Comments {
+		if pass.Fset.Position(c.Pos()).Column != 1 {
+			continue
+		}
+		comments = append(comments, &position{pos: c.Pos(), end: c.End()})
+	}
+	return comments
 }
 
 func selectDeclForFunc(name *ast.Ident) decl {
@@ -181,7 +188,7 @@ func getPos(n ast.Node, comments []*position, end token.Pos) token.Pos {
 	return pos
 }
 
-func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (bool, int) {
+func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[decl][]*position, decl decl, f *token.File) (int, error) {
 	if nodes, ok := groups[decl]; ok {
 		for _, node := range nodes {
 			if node.pos == positions[i].pos {
@@ -191,15 +198,18 @@ func reportGroup(pass *analysis.Pass, positions []*position, i int, groups map[d
 
 			node.pos = token.Pos(int(node.pos) - f.Base())
 			node.end = token.Pos(int(node.end) - f.Base())
-			fileBytes, _ := readFile(node.filename)
+			fileBytes, err := readFile(node.filename)
+			if err != nil {
+				return i, err
+			}
 			text := fileBytes[node.pos:node.end]
 
 			report(pass, positions[i].pos, positions[i].end, text, "formatter_order")
 			i++
 		}
-		return true, i
+		return i, nil
 	}
-	return false, i
+	return i, nil
 }
 
 func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg string) {
@@ -229,9 +239,6 @@ func readFile(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(file)
 
 	data := make([]byte, 64)
 	str := ""
@@ -243,5 +250,5 @@ func readFile(path string) ([]byte, error) {
 		str += string(data[:fl])
 	}
 
-	return []byte(str), nil
+	return []byte(str), file.Close()
 }
