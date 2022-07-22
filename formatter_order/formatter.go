@@ -3,8 +3,7 @@ package formatter_order
 import (
 	"go/ast"
 	"go/token"
-	"io"
-	"os"
+	"io/ioutil"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -138,25 +137,26 @@ func (data *fileData) appendGenDecl(pos token.Pos, e *ast.GenDecl) {
 }
 
 func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, error) {
-	if nodes, ok := data.groups[decl]; ok {
-		for _, node := range nodes {
-			if node.pos == data.positions[i].pos {
-				i++
-				continue
-			}
-
-			node.pos = token.Pos(int(node.pos) - data.currentFile.Base())
-			node.end = token.Pos(int(node.end) - data.currentFile.Base())
-			fileBytes, err := readFile(node.filename)
-			if err != nil {
-				return i, err
-			}
-			text := fileBytes[node.pos:node.end]
-
-			report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
-			i++
-		}
+	nodes, ok := data.groups[decl]
+	if !ok {
 		return i, nil
+	}
+	for _, node := range nodes {
+		if node.pos == data.positions[i].pos {
+			i++
+			continue
+		}
+
+		node.pos = token.Pos(int(node.pos) - data.currentFile.Base())
+		node.end = token.Pos(int(node.end) - data.currentFile.Base())
+		fileBytes, err := ioutil.ReadFile(node.filename)
+		if err != nil {
+			return i, err
+		}
+		text := fileBytes[node.pos:node.end]
+
+		report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
+		i++
 	}
 	return i, nil
 }
@@ -240,23 +240,4 @@ func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		},
 		Related: nil,
 	})
-}
-
-func readFile(path string) ([]byte, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	data := make([]byte, 64)
-	str := ""
-	for {
-		fl, err := file.Read(data)
-		if err == io.EOF {
-			break
-		}
-		str += string(data[:fl])
-	}
-
-	return []byte(str), file.Close()
 }
