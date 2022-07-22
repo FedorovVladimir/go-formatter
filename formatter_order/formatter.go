@@ -59,34 +59,33 @@ type fileData struct {
 	lastNode     *position
 	positions    []*position
 	lastPosition *position
+	currentFile  *token.File
 }
 
-func newFileData() *fileData {
+func newFileData(currentFile *token.File) *fileData {
 	return &fileData{
 		groups:       map[decl][]*position{},
 		lastNode:     nil,
 		positions:    []*position{},
 		lastPosition: nil,
+		currentFile:  currentFile,
 	}
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
-		data := newFileData()
+		if len(file.Decls) == 0 {
+			continue
+		}
 
+		data := newFileData(pass.Fset.File(file.Decls[0].Pos()))
 		comments := getComments(pass, file)
 
 		for _, n := range file.Decls {
-			currentFile := pass.Fset.File(n.Pos())
 
-			var prevEnd token.Pos
-			if data.lastNode != nil {
-				prevEnd = data.lastNode.end
-			}
-			if prevEnd == token.NoPos {
-				prevEnd = token.Pos(currentFile.Base())
-			}
+			prevEnd := data.getPrevEnd()
 			pos := getPos(n, comments, prevEnd)
+
 			if data.lastNode != nil {
 				data.lastNode.end = pos - 1
 			}
@@ -96,7 +95,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 			switch e := n.(type) {
 			case *ast.FuncDecl:
-				data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+				data.lastNode = &position{pos: pos, end: e.End(), filename: data.currentFile.Name()}
 				d := selectDeclForFunc(e.Name)
 				data.groups[d] = append(data.groups[d], data.lastNode)
 
@@ -105,24 +104,20 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			case *ast.GenDecl:
 				switch e.Tok {
 				case token.IMPORT:
-					data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+					data.lastNode = &position{pos: pos, end: e.End(), filename: data.currentFile.Name()}
 					data.lastPosition = &position{pos: pos, end: e.End()}
 				case token.CONST, token.VAR, token.TYPE:
-					if currentFile.Position(e.Pos()).Column != 1 {
+					if data.currentFile.Position(e.Pos()).Column != 1 {
 						continue
 					}
 
-					data.lastNode = &position{pos: pos, end: e.End(), filename: currentFile.Name()}
+					data.lastNode = &position{pos: pos, end: e.End(), filename: data.currentFile.Name()}
 					data.groups[tokenToDecl[e.Tok]] = append(data.groups[tokenToDecl[e.Tok]], data.lastNode)
 
 					data.lastPosition = &position{pos: pos, end: e.End()}
 					data.positions = append(data.positions, data.lastPosition)
 				}
 			}
-		}
-
-		if len(data.positions) == 0 {
-			continue
 		}
 
 		f := pass.Fset.File(data.lastPosition.pos)
@@ -141,6 +136,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	return nil, nil
+}
+
+func (data *fileData) getPrevEnd() token.Pos {
+	if data.lastNode != nil {
+		return data.lastNode.end
+	}
+	return token.Pos(data.currentFile.Base())
 }
 
 func getComments(pass *analysis.Pass, file *ast.File) []*position {
