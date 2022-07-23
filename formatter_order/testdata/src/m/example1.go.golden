@@ -1,0 +1,13 @@
+package main
+
+// doc for file
+
+import "fmt"
+
+func Hello() { // want "incorrect declaration order"
+
+}
+
+func main() { // want "incorrect declaration order"
+	fmt.Println("Hello")
+}

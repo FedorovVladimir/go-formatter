@@ -1,7 +1,0 @@
-package main
-
-type car struct{}
-
-func (c *car) run() {}
-
-func (c *car) stop() {} // want "methods_with_star_and_rename"

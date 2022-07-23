@@ -1,0 +1,6 @@
+package main
+
+var d = "d"
+
+type e struct {
+}

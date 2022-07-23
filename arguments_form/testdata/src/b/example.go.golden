@@ -1,5 +1,0 @@
-package a
-
-func argumentsForm(a int, b int, c int) { // want "arguments form"
-
-}

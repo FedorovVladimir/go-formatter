@@ -8,8 +8,8 @@ import (
 
 type config struct {
 	Formatters []struct {
-		Name string `json:"name"`
-		On   bool   `json:"on"`
+		Name    string `json:"name"`
+		Enabled bool   `json:"enabled"`
 	} `json:"formatters"`
 }
 
@@ -22,7 +22,7 @@ func ReadConfig() (*config, error) {
 	}
 	defer file.Close()
 
-	data := make([]byte, 64) // ?
+	data := make([]byte, 64)
 	str := ""
 	for {
 		fl, err := file.Read(data)

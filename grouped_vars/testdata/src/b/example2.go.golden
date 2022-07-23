@@ -1,6 +1,0 @@
-package main
-
-var (
-	a = "a" // want "grouped vars"
-	b = "b"
-)

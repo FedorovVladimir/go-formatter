@@ -1,6 +1,0 @@
-package main
-
-var d = "d" // want "order"
-// want "order"
-
-type e struct{}
