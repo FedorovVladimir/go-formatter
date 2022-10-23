@@ -28,7 +28,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		currentFile := pass.Fset.File(file.Decls[0].Pos())
 		fileBytes, err := ioutil.ReadFile(currentFile.Name())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		for _, n := range file.Decls {
@@ -43,8 +43,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			spec := group.Specs[0].(*ast.ValueSpec)
 
 			if spec.Doc != nil {
-				pos := token.Pos(int(spec.Doc.Pos()) - currentFile.Base())
-				end := token.Pos(int(spec.Doc.End()) - currentFile.Base())
+				pos := utils.GetPosInFile(currentFile, spec.Doc.Pos())
+				end := utils.GetPosInFile(currentFile, spec.Doc.End())
 				text := append(fileBytes[pos:end], []byte("\n")...)
 				utils.Report(pass, group.Pos(), group.Pos(), text, "incorrect single declaration style for doc")
 			}
@@ -53,8 +53,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if spec.Comment != nil {
 				specEnd = spec.Comment.End()
 			}
-			pos := token.Pos(int(spec.Pos()) - currentFile.Base())
-			end := token.Pos(int(specEnd) - currentFile.Base())
+			pos := utils.GetPosInFile(currentFile, spec.Pos())
+			end := utils.GetPosInFile(currentFile, specEnd)
 			text := fileBytes[pos:end]
 			utils.Report(pass, group.Lparen, group.Rparen+1, text, "incorrect single declaration style")
 		}

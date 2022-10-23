@@ -148,8 +148,8 @@ func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, e
 			continue
 		}
 
-		node.pos = token.Pos(int(node.pos) - data.currentFile.Base())
-		node.end = token.Pos(int(node.end) - data.currentFile.Base())
+		node.pos = utils.GetPosInFile(data.currentFile, node.pos)
+		node.end = utils.GetPosInFile(data.currentFile, node.end)
 		fileBytes, err := ioutil.ReadFile(node.filename)
 		if err != nil {
 			return i, err

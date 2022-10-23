@@ -27,3 +27,7 @@ func Report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 		Related: nil,
 	})
 }
+
+func GetPosInFile(file *token.File, pos token.Pos) token.Pos {
+	return token.Pos(int(pos) - file.Base())
+}
