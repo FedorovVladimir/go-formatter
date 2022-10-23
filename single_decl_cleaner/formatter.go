@@ -40,8 +40,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				continue
 			}
 
-			pos := token.Pos(int(group.Specs[0].Pos()) - currentFile.Base())
-			end := token.Pos(int(group.Specs[0].End()) - currentFile.Base())
+			spec := group.Specs[0].(*ast.ValueSpec)
+			specEnd := spec.End()
+			if spec.Comment != nil {
+				specEnd = spec.Comment.End()
+			}
+			pos := token.Pos(int(spec.Pos()) - currentFile.Base())
+			end := token.Pos(int(specEnd) - currentFile.Base())
 			text := fileBytes[pos:end]
 
 			utils.Report(pass, group.Lparen, group.Rparen+1, text, "incorrect single declaration style")
