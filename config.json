@@ -3,6 +3,10 @@
     {
       "name": "formatter_order",
       "enabled": true
+    },
+    {
+      "name": "single_decl_cleaner",
+      "enabled": true
     }
   ]
 }

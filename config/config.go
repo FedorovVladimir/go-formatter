@@ -6,15 +6,15 @@ import (
 	"os"
 )
 
-type config struct {
+type Config struct {
 	Formatters []struct {
 		Name    string `json:"name"`
 		Enabled bool   `json:"enabled"`
 	} `json:"formatters"`
 }
 
-func ReadConfig() (*config, error) {
-	m := &config{}
+func ReadConfig() (*Config, error) {
+	m := &Config{}
 
 	file, err := os.Open("config.json")
 	if err != nil {
