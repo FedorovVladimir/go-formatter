@@ -1,0 +1,4 @@
+package main
+
+// comment
+var v1 = "v1"
