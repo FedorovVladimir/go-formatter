@@ -1,0 +1,4 @@
+package main
+
+// comment
+const c3 = "c3"
