@@ -148,13 +148,11 @@ func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, e
 			continue
 		}
 
-		node.pos = utils.GetPosInFile(data.currentFile, node.pos)
-		node.end = utils.GetPosInFile(data.currentFile, node.end)
 		fileBytes, err := ioutil.ReadFile(node.filename)
 		if err != nil {
 			return i, err
 		}
-		text := fileBytes[node.pos:node.end]
+		text := utils.CutTextFromFile(fileBytes, data.currentFile, node.pos, node.end)
 
 		utils.Report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
 		i++

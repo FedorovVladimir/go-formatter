@@ -10,7 +10,7 @@ import (
 	"golang.org/x/tools/go/analysis/passes/inspect"
 )
 
-const Doc = `formatter_order`
+const Doc = `single_decl_cleaner`
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "single_decl_cleaner",
@@ -43,9 +43,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			spec := group.Specs[0].(*ast.ValueSpec)
 
 			if spec.Doc != nil {
-				pos := utils.GetPosInFile(currentFile, spec.Doc.Pos())
-				end := utils.GetPosInFile(currentFile, spec.Doc.End())
-				text := append(fileBytes[pos:end], []byte("\n")...)
+				text := utils.CutTextFromFile(fileBytes, currentFile, spec.Doc.Pos(), spec.Doc.End())
+				text = append(text, []byte("\n")...)
 				utils.Report(pass, group.Pos(), group.Pos(), text, "incorrect single declaration style for doc")
 			}
 
@@ -53,9 +52,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if spec.Comment != nil {
 				specEnd = spec.Comment.End()
 			}
-			pos := utils.GetPosInFile(currentFile, spec.Pos())
-			end := utils.GetPosInFile(currentFile, specEnd)
-			text := fileBytes[pos:end]
+			text := utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), specEnd)
 			utils.Report(pass, group.Lparen, group.Rparen+1, text, "incorrect single declaration style")
 		}
 	}

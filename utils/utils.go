@@ -31,3 +31,9 @@ func Report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg 
 func GetPosInFile(file *token.File, pos token.Pos) token.Pos {
 	return token.Pos(int(pos) - file.Base())
 }
+
+func CutTextFromFile(fileBytes []byte, file *token.File, pos token.Pos, end token.Pos) []byte {
+	posInFile := GetPosInFile(file, pos)
+	endInFile := GetPosInFile(file, end)
+	return fileBytes[posInFile:endInFile]
+}
