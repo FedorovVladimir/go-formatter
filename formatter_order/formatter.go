@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/FedorovVladimir/go-formatter/utils"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 )
@@ -155,7 +156,7 @@ func (data *fileData) reportGroup(pass *analysis.Pass, i int, decl decl) (int, e
 		}
 		text := fileBytes[node.pos:node.end]
 
-		report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
+		utils.Report(pass, data.positions[i].pos, data.positions[i].end, text, "incorrect declaration order")
 		i++
 	}
 	return i, nil
@@ -218,26 +219,4 @@ func selectDeclForFunc(name *ast.Ident) decl {
 		return publicFuncDecl
 	}
 	return privateFuncDecl
-}
-
-func report(pass *analysis.Pass, pos token.Pos, end token.Pos, text []byte, msg string) {
-	pass.Report(analysis.Diagnostic{
-		Pos:      pos,
-		End:      end,
-		Category: msg,
-		Message:  msg,
-		SuggestedFixes: []analysis.SuggestedFix{
-			{
-				Message: msg,
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     pos,
-						End:     end,
-						NewText: text,
-					},
-				},
-			},
-		},
-		Related: nil,
-	})
 }
