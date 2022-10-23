@@ -32,7 +32,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		for _, n := range file.Decls {
-			group := n.(*ast.GenDecl)
+			group, ok := n.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
 			if group.Lparen == token.NoPos {
 				continue
 			}
