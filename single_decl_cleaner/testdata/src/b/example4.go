@@ -1,6 +1,6 @@
 package main
 
 var ( // want "incorrect single declaration style for doc" "incorrect single declaration style"
-	// comment
+	// doc
 	v1 = "v1"
 )
