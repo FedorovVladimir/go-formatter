@@ -18,9 +18,14 @@
     {
       "name": "formatter_order",
       "enabled": true
+    },
+    {
+      "name": "single_decl_cleaner",
+      "enabled": true
     }
   ]
 }
+
 ```
 
 ## Правила форматирования
@@ -51,6 +56,26 @@ var v2 = "v2"
 type e struct{}
 ```
 
+### single_decl_cleaner
+
+До
+
+```go
+package main
+
+const (
+	c = "c"
+)
+```
+
+После
+
+```go
+package main
+
+const c = "c"
+```
+
 ## Как пользоваться
 
 ### Запуск
@@ -58,7 +83,7 @@ type e struct{}
 Для запуска на весь проект
 
 ```shell
-go-formatter -fix .
+go-formatter -fix ./...
 ```
 
 Для запуска на отдельную директорию
