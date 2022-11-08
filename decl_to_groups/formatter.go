@@ -43,11 +43,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			spec := group.Specs[0].(*ast.ValueSpec)
 
 			specEnd := spec.End()
+			var comment []byte
 			if spec.Comment != nil {
 				specEnd = spec.Comment.End()
+				comment = utils.CutTextFromFile(fileBytes, currentFile, spec.Comment.Pos(), spec.Comment.End())
 			}
 			text := utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), spec.End())
 			text = append([]byte("(\n"), text...)
+			text = append(text, comment...)
 			text = append(text, []byte("\n)")...)
 			utils.Report(pass, spec.Pos(), specEnd, text, "incorrect single declaration style")
 		}
