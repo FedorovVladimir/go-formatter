@@ -63,3 +63,10 @@ func GetSpecEnd(spec ast.Spec) token.Pos {
 func GetSpecText(fileBytes []byte, currentFile *token.File, spec ast.Spec) []byte {
 	return CutTextFromFile(fileBytes, currentFile, spec.Pos(), GetSpecEnd(spec))
 }
+
+func GetGroupText(fileBytes []byte, currentFile *token.File, group *ast.GenDecl) []byte {
+	if group.Lparen == token.NoPos {
+		return append([]byte("\t"), GetSpecText(fileBytes, currentFile, group.Specs[0])...)
+	}
+	return CutTextFromFile(fileBytes, currentFile, group.Lparen+2, group.Rparen-1)
+}

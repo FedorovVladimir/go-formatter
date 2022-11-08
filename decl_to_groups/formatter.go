@@ -73,15 +73,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				groups[len(groups)-1].groupType = getGroupType(group)
 			}
 
-			for _, spec := range group.Specs {
-				text := groups[len(groups)-1].specsText
-				if len(text) > 0 {
-					text = append(text, []byte("\n")...)
-				}
-				text = append(text, []byte("\t")...)
-				text = append(text, utils.GetSpecText(fileBytes, currentFile, spec)...)
-				groups[len(groups)-1].specsText = text
+			text := groups[len(groups)-1].specsText
+			if len(text) > 0 {
+				text = append(text, []byte("\n")...)
 			}
+			text = append(text, utils.GetGroupText(fileBytes, currentFile, group)...)
+			groups[len(groups)-1].specsText = text
 
 			groupEnd := getGroupEnd(group)
 			groups[len(groups)-1].groupEnd = groupEnd

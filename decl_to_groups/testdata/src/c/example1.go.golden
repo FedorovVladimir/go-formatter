@@ -1,6 +1,7 @@
 package main
 
 var (
+	// want "incorrect declaration style"
 	v1 = "v1"
 	v2 = "v2"
 )
