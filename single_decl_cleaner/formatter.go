@@ -51,11 +51,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				utils.Report(pass, group.Pos(), group.Pos(), text, "incorrect single declaration style for doc")
 			}
 
-			specEnd := spec.End()
-			if spec.Comment != nil {
-				specEnd = spec.Comment.End()
-			}
-			text := utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), specEnd)
+			text := utils.GetSpecText(fileBytes, currentFile, spec)
 			utils.Report(pass, group.Lparen, group.Rparen+1, text, "incorrect single declaration style")
 		}
 	}
