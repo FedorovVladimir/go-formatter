@@ -1,0 +1,9 @@
+package main
+
+const (
+	c1 = "c1"
+)
+
+const (
+	c2 = "c2"
+)
