@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/FedorovVladimir/go-formatter/config"
+	"github.com/FedorovVladimir/go-formatter/decl_to_groups"
 	"github.com/FedorovVladimir/go-formatter/formatter_order"
 	"github.com/FedorovVladimir/go-formatter/single_decl_cleaner"
 	"golang.org/x/tools/go/analysis"
@@ -13,6 +14,7 @@ import (
 var formatters = map[string]*analysis.Analyzer{
 	"formatter_order":     formatter_order.Analyzer,
 	"single_decl_cleaner": single_decl_cleaner.Analyzer,
+	"decl_to_groups":      decl_to_groups.Analyzer,
 }
 
 func main() {

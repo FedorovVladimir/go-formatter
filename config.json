@@ -7,6 +7,10 @@
     {
       "name": "single_decl_cleaner",
       "enabled": true
+    },
+    {
+      "name": "decl_to_groups",
+      "enabled": false
     }
   ]
 }

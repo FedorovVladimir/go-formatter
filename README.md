@@ -75,6 +75,26 @@ package main
 const c = "c"
 ```
 
+### decl_to_groups
+
+До
+
+```go
+package main
+
+const c = "c"
+```
+
+После
+
+```go
+package main
+
+const (
+	c = "c"
+)
+```
+
 ## Как пользоваться
 
 ### Запуск
