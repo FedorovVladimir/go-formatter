@@ -27,6 +27,18 @@ type declGroup struct {
 	groupEnd  token.Pos
 }
 
+func (d *declGroup) toCode() []byte {
+	return bytes.Join(
+		[][]byte{
+			[]byte(d.groupType),
+			[]byte(" (\n"),
+			d.specsText,
+			[]byte("\n)"),
+		},
+		[]byte{},
+	)
+}
+
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		var groups []declGroup
@@ -76,10 +88,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 		for _, group := range groups {
 			oldText := utils.CutTextFromFile(fileBytes, currentFile, group.groupPos, group.groupEnd)
-			text := append(append([]byte((" (\n")), group.specsText...), []byte("\n)")...)
-			text = append([]byte(group.groupType), text...)
-			if !bytes.Equal(oldText, text) {
-				utils.Report(pass, group.groupPos, group.groupEnd, text, "incorrect single declaration style")
+			newText := group.toCode()
+			if !bytes.Equal(oldText, newText) {
+				utils.Report(pass, group.groupPos, group.groupEnd, newText, "incorrect single declaration style")
 			}
 		}
 	}
