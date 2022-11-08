@@ -19,8 +19,14 @@ var Analyzer = &analysis.Analyzer{
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
 
+type declGroup struct {
+	specsText []byte
+	groupPos  token.Pos
+}
+
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
+		var groups []declGroup
 		if len(file.Decls) == 0 {
 			continue
 		}
@@ -39,35 +45,50 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if group.Lparen != token.NoPos {
 				continue
 			}
-
-			spec := group.Specs[0]
-			specEnd := spec.End()
-			var comment []byte
-
-			switch s := spec.(type) {
-			case *ast.ValueSpec: // const and var
-				if s.Comment != nil {
-					specEnd = s.Comment.End()
-					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
-				}
-			case *ast.TypeSpec:
-				if s.Comment != nil {
-					specEnd = s.Comment.End()
-					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
-				}
-			case *ast.ImportSpec:
-				if s.Comment != nil {
-					specEnd = s.Comment.End()
-					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
-				}
+			if len(group.Specs) > 1 {
+				continue
 			}
 
-			text := utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), spec.End())
-			text = append([]byte("(\n"), text...)
-			text = append(text, comment...)
-			text = append(text, []byte("\n)")...)
-			utils.Report(pass, spec.Pos(), specEnd, text, "incorrect single declaration style")
+			if len(groups) == 0 || groups[len(groups)-1].groupPos != 0 {
+				groups = append(groups, declGroup{})
+			}
+
+			spec := group.Specs[0]
+
+			groups[len(groups)-1].specsText = getText(fileBytes, currentFile, spec)
+			groups[len(groups)-1].groupPos = group.Pos()
+			utils.Report(pass, group.Pos(), getSpecEnd(spec), []byte{}, "rm decl")
+		}
+		for _, group := range groups {
+			text := append(append([]byte(("var (\n")), group.specsText...), []byte("\n)")...)
+			utils.Report(pass, group.groupPos, group.groupPos, text, "incorrect single declaration style")
 		}
 	}
+
 	return nil, nil
+}
+
+func getText(fileBytes []byte, currentFile *token.File, spec ast.Spec) []byte {
+	return utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), getSpecEnd(spec))
+}
+
+func getSpecEnd(spec ast.Spec) token.Pos {
+	end := spec.End()
+	switch s := spec.(type) {
+	case *ast.ValueSpec: // const and var
+		if s.Comment != nil {
+			end = s.Comment.End()
+		}
+	case *ast.TypeSpec:
+		if s.Comment != nil {
+			end = s.Comment.End()
+		}
+	case *ast.ImportSpec:
+		if s.Comment != nil {
+			end = s.Comment.End()
+		}
+	default:
+		panic("spec not support")
+	}
+	return end
 }

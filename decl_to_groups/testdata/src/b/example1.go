@@ -1,16 +1,5 @@
 package main
 
-import "fmt" // want "incorrect single declaration style"
+var v1 = "v1" // want "rm decl" "incorrect single declaration style"
 
-var v1 = "v1" // want "incorrect single declaration style"
-
-const c1 = "c1" // want "incorrect single declaration style"
-
-const c2 = "c2" // want "incorrect single declaration style"
-
-// doc
-const c3 = "c3" // want "incorrect single declaration style"
-
-func main() {
-	fmt.Println()
-}
+var v2 = "v2" // want "rm decl" "incorrect single declaration style"
