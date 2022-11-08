@@ -1,17 +1,17 @@
 package main
 
-var ( // want "incorrect single declaration style"
+var ( // want "incorrect declaration style"
 	v1 = "v1"
 )
 var v2 = "v2"
 
-var v3 = "v3" // want "incorrect single declaration style"
+var v3 = "v3" // want "incorrect declaration style"
 var v4 = "v4"
 
-var v5 = "v5" // want "incorrect single declaration style"
+var v5 = "v5" // want "incorrect declaration style"
 var (
 	v6 = "v6"
 )
 
-const c1 = "c1" // want "incorrect single declaration style"
-var v7 = "v7"   // want "incorrect single declaration style"
+const c1 = "c1" // want "incorrect declaration style"
+var v7 = "v7"   // want "incorrect declaration style"

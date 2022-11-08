@@ -90,7 +90,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			oldText := utils.CutTextFromFile(fileBytes, currentFile, group.groupPos, group.groupEnd)
 			newText := group.toCode()
 			if !bytes.Equal(oldText, newText) {
-				utils.Report(pass, group.groupPos, group.groupEnd, newText, "incorrect single declaration style")
+				utils.Report(pass, group.groupPos, group.groupEnd, newText, "incorrect declaration style")
 			}
 		}
 	}
