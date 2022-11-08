@@ -8,6 +8,9 @@ const c1 = "c1" // want "incorrect single declaration style"
 
 const c2 = "c2" // want "incorrect single declaration style"
 
+// doc
+const c3 = "c3" // want "incorrect single declaration style"
+
 func main() {
 	fmt.Println()
 }

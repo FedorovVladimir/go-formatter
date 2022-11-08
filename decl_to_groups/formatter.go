@@ -45,7 +45,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			var comment []byte
 
 			switch s := spec.(type) {
-			case *ast.ValueSpec:
+			case *ast.ValueSpec: // const and var
 				if s.Comment != nil {
 					specEnd = s.Comment.End()
 					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
