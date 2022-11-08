@@ -4,3 +4,8 @@ var (
 	v1 = "v1"
 	v2 = "v2"
 )
+
+var (
+	v3 = "v3" // want "incorrect single declaration style"
+	v4 = "v4"
+)
