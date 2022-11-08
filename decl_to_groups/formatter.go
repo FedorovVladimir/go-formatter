@@ -20,8 +20,10 @@ var Analyzer = &analysis.Analyzer{
 }
 
 type declGroup struct {
+	groupType string
 	specsText []byte
 	groupPos  token.Pos
+	groupEnd  token.Pos
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
@@ -42,25 +44,34 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if !ok {
 				continue
 			}
-			if group.Lparen != token.NoPos {
-				continue
-			}
-			if len(group.Specs) > 1 {
-				continue
-			}
 
-			if len(groups) == 0 || groups[len(groups)-1].groupPos != 0 {
+			if len(groups) == 0 {
 				groups = append(groups, declGroup{})
 			}
+			if groups[len(groups)-1].groupPos != 0 {
+				lastGroupLastLine := pass.Fset.Position(groups[len(groups)-1].groupEnd).Line
+				currentLine := pass.Fset.Position(group.Pos()).Line
+				if currentLine-lastGroupLastLine > 1 {
+					groups = append(groups, declGroup{})
+				}
+			}
 
-			spec := group.Specs[0]
+			for _, spec := range group.Specs {
+				text := groups[len(groups)-1].specsText
+				text = append(text, []byte("\n")...)
+				text = append(text, getText(fileBytes, currentFile, spec)...)
+				groups[len(groups)-1].specsText = text
+			}
 
-			groups[len(groups)-1].specsText = getText(fileBytes, currentFile, spec)
 			groups[len(groups)-1].groupPos = group.Pos()
-			utils.Report(pass, group.Pos(), getSpecEnd(spec), []byte{}, "rm decl")
+			groupEnd := getGroupEnd(group)
+			groups[len(groups)-1].groupEnd = groupEnd
+			groups[len(groups)-1].groupType = getGroupType(group)
+			utils.Report(pass, group.Pos(), groupEnd, []byte{}, "rm decl")
 		}
 		for _, group := range groups {
-			text := append(append([]byte(("var (\n")), group.specsText...), []byte("\n)")...)
+			text := append(append([]byte((" (\n")), group.specsText...), []byte("\n)")...)
+			text = append([]byte(group.groupType), text...)
 			utils.Report(pass, group.groupPos, group.groupPos, text, "incorrect single declaration style")
 		}
 	}
@@ -91,4 +102,25 @@ func getSpecEnd(spec ast.Spec) token.Pos {
 		panic("spec not support")
 	}
 	return end
+}
+
+func getGroupEnd(group *ast.GenDecl) token.Pos {
+	if group.Lparen == 0 {
+		return getSpecEnd(group.Specs[0])
+	}
+	return group.Rparen + 1
+}
+
+func getGroupType(group *ast.GenDecl) string {
+	switch group.Tok {
+	case token.IMPORT:
+		return "import"
+	case token.VAR:
+		return "var"
+	case token.CONST:
+		return "const"
+	case token.TYPE:
+		return "type"
+	}
+	panic("tok not support")
 }
