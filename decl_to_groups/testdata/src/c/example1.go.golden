@@ -2,5 +2,5 @@ package main
 
 var (
 	v1 = "v1"
-	v2 = "v2" // want "rm decl" "incorrect single declaration style"
+	v2 = "v2"
 )

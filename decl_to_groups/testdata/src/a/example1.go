@@ -1,14 +1,14 @@
 package main
 
-import ( // want "rm decl" "incorrect single declaration style"
+import (
 	"fmt"
 )
 
-var ( // want "rm decl" "incorrect single declaration style"
+var (
 	v1 = "v1"
 )
 
-const ( // want "rm decl" "incorrect single declaration style"
+const (
 	c1 = "c1"
 )
 

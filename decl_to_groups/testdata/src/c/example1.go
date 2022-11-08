@@ -1,6 +1,6 @@
 package main
 
-var ( // want "rm decl"
+var ( // want "incorrect single declaration style"
 	v1 = "v1"
 )
-var v2 = "v2" // want "rm decl" "incorrect single declaration style"
+var v2 = "v2"

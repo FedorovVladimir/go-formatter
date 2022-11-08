@@ -1,6 +1,7 @@
 package decl_to_groups
 
 import (
+	"bytes"
 	"go/ast"
 	"go/token"
 	"io/ioutil"
@@ -55,24 +56,31 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					groups = append(groups, declGroup{})
 				}
 			}
+			if groups[len(groups)-1].groupPos == 0 {
+				groups[len(groups)-1].groupPos = group.Pos()
+			}
 
 			for _, spec := range group.Specs {
 				text := groups[len(groups)-1].specsText
-				text = append(text, []byte("\n")...)
+				if len(text) > 0 {
+					text = append(text, []byte("\n")...)
+				}
+				text = append(text, []byte("\t")...)
 				text = append(text, getText(fileBytes, currentFile, spec)...)
 				groups[len(groups)-1].specsText = text
 			}
 
-			groups[len(groups)-1].groupPos = group.Pos()
 			groupEnd := getGroupEnd(group)
 			groups[len(groups)-1].groupEnd = groupEnd
 			groups[len(groups)-1].groupType = getGroupType(group)
-			utils.Report(pass, group.Pos(), groupEnd, []byte{}, "rm decl")
 		}
 		for _, group := range groups {
+			oldText := utils.CutTextFromFile(fileBytes, currentFile, group.groupPos, group.groupEnd)
 			text := append(append([]byte((" (\n")), group.specsText...), []byte("\n)")...)
 			text = append([]byte(group.groupType), text...)
-			utils.Report(pass, group.groupPos, group.groupPos, text, "incorrect single declaration style")
+			if !bytes.Equal(oldText, text) {
+				utils.Report(pass, group.groupPos, group.groupEnd, text, "incorrect single declaration style")
+			}
 		}
 	}
 
