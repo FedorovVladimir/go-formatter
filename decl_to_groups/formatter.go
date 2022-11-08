@@ -51,8 +51,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 			if groups[len(groups)-1].groupPos != 0 {
 				lastGroupLastLine := pass.Fset.Position(groups[len(groups)-1].groupEnd).Line
-				currentLine := pass.Fset.Position(group.Pos()).Line
-				if currentLine-lastGroupLastLine > 1 {
+				currentGroupFirstLine := pass.Fset.Position(group.Pos()).Line
+				if currentGroupFirstLine-lastGroupLastLine > 1 {
 					groups = append(groups, declGroup{})
 				}
 			}
