@@ -40,14 +40,28 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				continue
 			}
 
-			spec := group.Specs[0].(*ast.ValueSpec)
-
+			spec := group.Specs[0]
 			specEnd := spec.End()
 			var comment []byte
-			if spec.Comment != nil {
-				specEnd = spec.Comment.End()
-				comment = utils.CutTextFromFile(fileBytes, currentFile, spec.Comment.Pos(), spec.Comment.End())
+
+			switch s := spec.(type) {
+			case *ast.ValueSpec:
+				if s.Comment != nil {
+					specEnd = s.Comment.End()
+					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
+				}
+			case *ast.TypeSpec:
+				if s.Comment != nil {
+					specEnd = s.Comment.End()
+					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
+				}
+			case *ast.ImportSpec:
+				if s.Comment != nil {
+					specEnd = s.Comment.End()
+					comment = utils.CutTextFromFile(fileBytes, currentFile, s.Comment.Pos(), s.Comment.End())
+				}
 			}
+
 			text := utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), spec.End())
 			text = append([]byte("(\n"), text...)
 			text = append(text, comment...)
