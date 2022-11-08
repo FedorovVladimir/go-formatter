@@ -52,12 +52,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if groups[len(groups)-1].groupPos != 0 {
 				lastGroupLastLine := pass.Fset.Position(groups[len(groups)-1].groupEnd).Line
 				currentGroupFirstLine := pass.Fset.Position(group.Pos()).Line
-				if currentGroupFirstLine-lastGroupLastLine > 1 {
+				if currentGroupFirstLine-lastGroupLastLine > 1 || groups[len(groups)-1].groupType != getGroupType(group) {
 					groups = append(groups, declGroup{})
 				}
 			}
 			if groups[len(groups)-1].groupPos == 0 {
 				groups[len(groups)-1].groupPos = group.Pos()
+				groups[len(groups)-1].groupType = getGroupType(group)
 			}
 
 			for _, spec := range group.Specs {
@@ -72,7 +73,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 			groupEnd := getGroupEnd(group)
 			groups[len(groups)-1].groupEnd = groupEnd
-			groups[len(groups)-1].groupType = getGroupType(group)
 		}
 		for _, group := range groups {
 			oldText := utils.CutTextFromFile(fileBytes, currentFile, group.groupPos, group.groupEnd)

@@ -12,3 +12,6 @@ var v5 = "v5" // want "incorrect single declaration style"
 var (
 	v6 = "v6"
 )
+
+const c1 = "c1" // want "incorrect single declaration style"
+var v7 = "v7"   // want "incorrect single declaration style"
