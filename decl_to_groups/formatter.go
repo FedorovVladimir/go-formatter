@@ -66,7 +66,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					text = append(text, []byte("\n")...)
 				}
 				text = append(text, []byte("\t")...)
-				text = append(text, getText(fileBytes, currentFile, spec)...)
+				text = append(text, utils.GetSpecText(fileBytes, currentFile, spec)...)
 				groups[len(groups)-1].specsText = text
 			}
 
@@ -87,34 +87,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func getText(fileBytes []byte, currentFile *token.File, spec ast.Spec) []byte {
-	return utils.CutTextFromFile(fileBytes, currentFile, spec.Pos(), getSpecEnd(spec))
-}
-
-func getSpecEnd(spec ast.Spec) token.Pos {
-	end := spec.End()
-	switch s := spec.(type) {
-	case *ast.ValueSpec: // const and var
-		if s.Comment != nil {
-			end = s.Comment.End()
-		}
-	case *ast.TypeSpec:
-		if s.Comment != nil {
-			end = s.Comment.End()
-		}
-	case *ast.ImportSpec:
-		if s.Comment != nil {
-			end = s.Comment.End()
-		}
-	default:
-		panic("spec not support")
-	}
-	return end
-}
-
 func getGroupEnd(group *ast.GenDecl) token.Pos {
 	if group.Lparen == 0 {
-		return getSpecEnd(group.Specs[0])
+		return utils.GetSpecEnd(group.Specs[0])
 	}
 	return group.Rparen + 1
 }
